@@ -1,0 +1,19 @@
+package testes;
+
+/**
+ *
+ * @author regis
+ */
+public class Teste {
+    public static void main(String[] args) {
+        double table_scores[][] = new double[2][2];
+        
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                System.out.println(table_scores[i][j]);
+                
+            }
+            
+        }
+    }
+}
