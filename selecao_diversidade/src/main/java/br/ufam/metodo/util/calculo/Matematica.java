@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Map.Entry;
 
 public class Matematica {
@@ -25,6 +26,15 @@ public class Matematica {
 
         return k - 1;
     }
+    
+    public static double gerarNumeroAleatorio(double limInferior, double limSuperior)
+	{
+		Random r = new Random();
+		double randomValue = limInferior + (limSuperior - limInferior) * r.nextDouble();
+		
+		return randomValue;
+	}
+	
     
     
     public static <T> T mostCommon(List<T> list) {
