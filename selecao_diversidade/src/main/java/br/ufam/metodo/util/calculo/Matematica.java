@@ -34,6 +34,21 @@ public class Matematica {
 		
 		return randomValue;
 	}
+    
+    public static String gerarNumerosAleatoriosString(double limInferior, double limSuperior, int quantidade)
+	{
+    	String retorno = "";
+    	String sep = ",";
+    	for (int i = 0; i < quantidade; i++)
+    	{
+    		 retorno += Matematica.gerarNumeroAleatorio(limInferior, limSuperior);
+    		 if (i < quantidade -1)
+    			 retorno += sep;
+    	}
+    	return retorno;
+	}
+    
+
 	
     
     

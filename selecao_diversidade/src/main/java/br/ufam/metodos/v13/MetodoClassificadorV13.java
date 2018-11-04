@@ -3,13 +3,10 @@ package br.ufam.metodos.v13;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
-import com.github.javacliparser.ListOption;
 import com.github.javacliparser.MultiChoiceOption;
-import com.github.javacliparser.Option;
 import com.yahoo.labs.samoa.instances.Instance;
 
 import br.ufam.diversidade.MedidaCalculo;
@@ -51,15 +48,21 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
 			Integer.MAX_VALUE);
 
-	public ListOption lambdasOption = new ListOption("lambdaAttributes", 'y',
-			"Lambdas of ensembles. Enter comma seperated list, ", new FloatOption("lambdaAttribute", ' ', "Lambda", 1),
-			new FloatOption[] { new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0) },
-			',');
-
+//	public ListOption lambdasOption = new ListOption("lambdaAttributes", 'y',
+//			"Lambdas of ensembles. Enter comma seperated list, ", new FloatOption("lambdaAttribute", ' ', "Lambda", 1),
+//			new FloatOption[] { new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
+//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
+//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
+//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
+//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0) },
+//			',');
+	
+	public FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
+            "Limite Inferior Lambda", 1);
+	
+	public FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
+            "Limite Superior Lambda", 1);
+	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
 
@@ -110,8 +113,6 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	public ClassOption baseLearner5Option = new ClassOption("baseLearner5", '5', "Classifier to train.",
 			Classifier.class, "trees.HoeffdingTree");
 
-	protected double[] lambdas;
-
 	// protected Ensembles ensembles;
 	protected Ensemble[] poolOfEnsembles;
 	protected int ultimoEnsembleSelecionadoIndex;
@@ -135,6 +136,16 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	public static final int DDM_WARNING_LEVEL = 1;
 
 	public static final int DDM_OUTCONTROL_LEVEL = 2;
+	
+	public static double[] lambdas;
+	
+	public static Double LAMBDA_MIN = null;
+	
+	public static Double LAMBDA_MAX = null;
+	
+	public static String LAMBDAS_csv = "";
+	
+	public static Integer LAMBDAS_NUM = null;
 
 	protected int changeDetected = 0;
 
@@ -146,25 +157,21 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 	protected MedidaCalculo medidaCalculo;
 	
-	public static String gerarLambdas(double limInferior, double limSuperior, int quantidade)
+	
+	public void gerarLambdas()
 	{
-		String retorno = "";
-		String sep = ",";
-		for (int i = 0; i < quantidade; i++)
-		{
-			 retorno += Matematica.gerarNumeroAleatorio(limInferior, limSuperior);
-			 if (i < quantidade -1)
-				 retorno += sep;
+		System.out.println("Gerando LAMBDAS : ");
+		this.lambdas = new double[LAMBDAS_NUM];
+		for (int i = 0; i < LAMBDAS_NUM; i++) {
+			this.lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
+			System.out.println(" " + this.lambdas[i]);
 		}
-		return retorno;
-		
+		System.out.println("-----------------------");
 	}
-	
-	
 	
 	@Override
 	public void resetLearningImpl() {
-
+		
 		medidaSelecao = MedidaSelecaoFactory.fabrica(this.selectionOptionEstrategiaSelecao.getChosenLabel());
 		medidaCalculo = MedidaCalculoFactory.fabrica(this.selectionOptionMedidaCalculo.getChosenLabel());
 
@@ -199,19 +206,33 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	private void estrategiaInicial() {
 
 		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
-
-		Option[] lambdasArray = lambdasOption.getList();
-		if (lambdasArray.length < this.poolOfEnsembles.length)
-			throw new RuntimeException("ERRO encontrado no parâmetro LAMBDA(y)");
-		this.lambdas = new double[this.poolOfEnsembles.length];
-		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-			this.lambdas[i] = ((FloatOption) lambdasArray[i]).getValue();
+		
+		boolean mudar = false;
+		
+		if (LAMBDAS_NUM == null || LAMBDAS_NUM != this.ensemblesNumberOption.getValue() )
+		{
+			LAMBDAS_NUM = this.ensemblesNumberOption.getValue();
+			mudar = true;
 		}
+		
+		if (LAMBDA_MIN == null || LAMBDA_MIN != this.lambdaMinOption.getValue())
+		{
+			LAMBDA_MIN = this.lambdaMinOption.getValue();
+			mudar = true;
+		}
+		
+		if (LAMBDA_MAX == null || LAMBDA_MAX != this.lambdaMaxOption.getValue())
+		{
+			LAMBDA_MAX = this.lambdaMaxOption.getValue();
+			mudar = true;
+		}
+		if (mudar)
+			this.gerarLambdas();
 
+		
 		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
 		this.ensemble_diversidade = new DiversidadePrequencial[this.poolOfEnsembles.length];
 		
-
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 			inicializa_ensemble(i);
 		}

@@ -18,8 +18,8 @@ public class Teste {
 //            
 //        }
     	
-    	String retorno = MetodoClassificadorV13.gerarLambdas(0.001, 0.005, 10);
-    	System.out.println(retorno);
+//    	String retorno = MetodoClassificadorV13.gerarLambdas(0.001, 0.005, 10);
+//    	System.out.println(retorno);
     	
     }
 }
