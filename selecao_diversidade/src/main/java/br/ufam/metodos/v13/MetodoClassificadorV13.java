@@ -207,27 +207,23 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
 		
-		boolean mudar = false;
-		
 		if (LAMBDAS_NUM == null || LAMBDAS_NUM != this.ensemblesNumberOption.getValue() )
 		{
 			LAMBDAS_NUM = this.ensemblesNumberOption.getValue();
-			mudar = true;
 		}
 		
 		if (LAMBDA_MIN == null || LAMBDA_MIN != this.lambdaMinOption.getValue())
 		{
 			LAMBDA_MIN = this.lambdaMinOption.getValue();
-			mudar = true;
 		}
 		
 		if (LAMBDA_MAX == null || LAMBDA_MAX != this.lambdaMaxOption.getValue())
 		{
 			LAMBDA_MAX = this.lambdaMaxOption.getValue();
-			mudar = true;
 		}
-		if (mudar)
-			this.gerarLambdas();
+
+
+		this.gerarLambdas();
 
 		
 		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
