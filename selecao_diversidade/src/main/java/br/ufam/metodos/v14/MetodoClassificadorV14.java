@@ -160,13 +160,13 @@ public class MetodoClassificadorV14 extends AbstractClassifier implements Detect
 	
 	public void gerarLambdas()
 	{
-		System.out.println("Gerando LAMBDAS : ");
+		//System.out.println("Gerando LAMBDAS : ");
 		this.lambdas = new double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
 			this.lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
-			System.out.println(" " + this.lambdas[i]);
+			//System.out.println(" " + this.lambdas[i]);
 		}
-		System.out.println("-----------------------");
+		//System.out.println("-----------------------");
 	}
 	
 	@Override
