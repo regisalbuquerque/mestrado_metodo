@@ -158,15 +158,22 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	protected MedidaCalculo medidaCalculo;
 	
 	
-	public void gerarLambdas()
+	public static void gerarLambdas()
 	{
-		//System.out.println("Gerando LAMBDAS : ");
-		this.lambdas = new double[LAMBDAS_NUM];
+		System.out.println("Gerando LAMBDAS ************* ");
+		lambdas = new double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
-			this.lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
-			//System.out.println(" " + this.lambdas[i]);
+			lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
 		}
-		//System.out.println("-----------------------");
+	}
+	
+	public static void mostrarLambdas()
+	{
+		System.out.println("LAMBDAS : ");
+		for (int i = 0; i < LAMBDAS_NUM; i++) {
+			System.out.println(" " + lambdas[i]);
+		}
+		System.out.println("-----------------------");
 	}
 	
 	@Override
@@ -223,7 +230,7 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 		}
 
 
-		this.gerarLambdas();
+		mostrarLambdas();
 
 		
 		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
@@ -236,7 +243,7 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	}
 
 	private void inicializa_ensemble(int i) {
-		this.poolOfEnsembles[i] = cria_novo_ensemble(this.lambdas[i]);
+		this.poolOfEnsembles[i] = cria_novo_ensemble(lambdas[i]);
 		this.ensemble_acc[i] = new AcuraciaPrequencial();
 		if (medidaCalculoJanela.getValue() == -1)
 		{
