@@ -42,7 +42,7 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 		return "Classifier that ...";
 	}
 
-	public IntOption ensemblesNumberOption = new IntOption("ensemblesNumber", 'n', "The number of ensembles.", 10, 1,
+	public static IntOption ensemblesNumberOption = new IntOption("ensemblesNumber", 'n', "The number of ensembles.", 10, 1,
 			Integer.MAX_VALUE);
 
 	public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
@@ -57,10 +57,10 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 //					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0) },
 //			',');
 	
-	public FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
+	public static FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
             "Limite Inferior Lambda", 1);
 	
-	public FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
+	public static FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
             "Limite Superior Lambda", 1);
 	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
@@ -157,9 +157,28 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 	protected MedidaCalculo medidaCalculo;
 	
+	public static void setupLambdas()
+	{
+		if (LAMBDAS_NUM == null || LAMBDAS_NUM != ensemblesNumberOption.getValue() )
+		{
+			LAMBDAS_NUM = ensemblesNumberOption.getValue();
+		}
+		
+		if (LAMBDA_MIN == null || LAMBDA_MIN != lambdaMinOption.getValue())
+		{
+			LAMBDA_MIN = lambdaMinOption.getValue();
+		}
+		
+		if (LAMBDA_MAX == null || LAMBDA_MAX != lambdaMaxOption.getValue())
+		{
+			LAMBDA_MAX = lambdaMaxOption.getValue();
+		}
+	}
 	
 	public static void gerarLambdas()
 	{
+		setupLambdas();
+		
 		System.out.println("Gerando LAMBDAS ************* ");
 		lambdas = new double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
@@ -214,21 +233,8 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
 		
-		if (LAMBDAS_NUM == null || LAMBDAS_NUM != this.ensemblesNumberOption.getValue() )
-		{
-			LAMBDAS_NUM = this.ensemblesNumberOption.getValue();
-		}
-		
-		if (LAMBDA_MIN == null || LAMBDA_MIN != this.lambdaMinOption.getValue())
-		{
-			LAMBDA_MIN = this.lambdaMinOption.getValue();
-		}
-		
-		if (LAMBDA_MAX == null || LAMBDA_MAX != this.lambdaMaxOption.getValue())
-		{
-			LAMBDA_MAX = this.lambdaMaxOption.getValue();
-		}
 
+		setupLambdas();
 
 		mostrarLambdas();
 
@@ -535,6 +541,12 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	public int getUltimoEnsembleSelecionadoIndex() {
 		return this.ultimoEnsembleSelecionadoIndex;
 	}
+	
+	@Override
+	public double getUltimoEnsembleSelecionadoLambda() {
+		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].lambdaOption.getValue();
+	}
+	
 	
 	
 

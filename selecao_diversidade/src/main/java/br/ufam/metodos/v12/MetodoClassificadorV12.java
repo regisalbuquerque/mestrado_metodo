@@ -496,6 +496,11 @@ public class MetodoClassificadorV12 extends AbstractClassifier implements Detect
 		return this.ultimoEnsembleSelecionadoIndex;
 	}
 	
+	@Override
+	public double getUltimoEnsembleSelecionadoLambda() {
+		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].lambdaOption.getValue();
+	}
+	
 	
 
 	// @Override
