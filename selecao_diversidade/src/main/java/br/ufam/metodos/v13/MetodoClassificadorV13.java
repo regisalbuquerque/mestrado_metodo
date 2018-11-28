@@ -1,6 +1,7 @@
 package br.ufam.metodos.v13;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import com.yahoo.labs.samoa.instances.Instance;
 
 import br.ufam.diversidade.MedidaCalculo;
 import br.ufam.diversidade.MedidaCalculoFactory;
+import br.ufam.metodo.diversidade.util.Diversidades;
 import br.ufam.metodo.util.calculo.Acuracia;
 import br.ufam.metodo.util.calculo.AcuraciaPrequencial;
 import br.ufam.metodo.util.calculo.DiversidadePrequencial;
@@ -19,9 +21,12 @@ import br.ufam.metodo.util.dados.BufferInstancias;
 import br.ufam.metodo.util.drift.DetectorDrift;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
+import br.ufam.metodo.util.medidor.Indicadores;
+import br.ufam.metodo.util.medidor.Resultado;
 import br.ufam.metodo.util.model.Ensemble;
 import br.ufam.metodo.util.model.EnsembleValor;
 import br.ufam.metodo.util.model.IEnsembleSelection;
+import br.ufam.metodo.util.model.IEnsemblesResultados;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
@@ -33,7 +38,7 @@ import moa.options.ClassOption;
  *
  * @author regis Versão 13
  */
-public class MetodoClassificadorV13 extends AbstractClassifier implements DetectorDrift, IEnsembleSelection {
+public class MetodoClassificadorV13 extends AbstractClassifier implements DetectorDrift, IEnsembleSelection, IEnsemblesResultados {
 
 	private static final long serialVersionUID = 1L;
 
@@ -157,6 +162,9 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 	protected MedidaCalculo medidaCalculo;
 	
+	public Indicadores[] indicadores = null;
+	public Resultado[] resultadosEnsembles = null;
+	
 	public static void setupLambdas()
 	{
 		if (LAMBDAS_NUM == null || LAMBDAS_NUM != ensemblesNumberOption.getValue() )
@@ -233,13 +241,18 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 
 		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
 		
+		if (resultadosEnsembles == null)
+			resultadosEnsembles = new Resultado[this.ensemblesNumberOption.getValue()];
+		
 
 		setupLambdas();
 
 		mostrarLambdas();
 
+		this.indicadores = new Indicadores[this.poolOfEnsembles.length];
 		
 		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
+		
 		this.ensemble_diversidade = new DiversidadePrequencial[this.poolOfEnsembles.length];
 		
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
@@ -249,6 +262,13 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	}
 
 	private void inicializa_ensemble(int i) {
+		this.indicadores[i] = new Indicadores();
+		if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
+		{
+			resultadosEnsembles[i] = new Resultado();
+			resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
+		}
+		
 		this.poolOfEnsembles[i] = cria_novo_ensemble(lambdas[i]);
 		this.ensemble_acc[i] = new AcuraciaPrequencial();
 		if (medidaCalculoJanela.getValue() == -1)
@@ -291,7 +311,9 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 																										// configuração
 																										// de lambdas
 																										// inicial
+				this.indicadores[i] = new Indicadores();
 				this.ensemble_acc[i] = new AcuraciaPrequencial();
+				
 			} else { // Mantem o Ensemble
 				ensemblesTemporario[i] = listaTemporaria.get(i).ensemble;
 			}
@@ -401,13 +423,21 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	private Ensemble treinarEnsemble(Instance inst, int i) {
 		Ensemble ensemble = this.poolOfEnsembles[i];
 
+		 boolean acertou;
 		//Antes de treinar - calcula ACC[]
 		int trueClass = (int) inst.classValue();
 		double[] votos = ensemble.getVotesForInstance(inst);
-		if (Utils.maxIndex(votos) == trueClass)
+		if (Utils.maxIndex(votos) == trueClass) {
 		    this.ensemble_acc[i].acertou();
+		    this.indicadores[i].acertou();
+		    acertou = true;
+		}
 		else
+		{
 		    this.ensemble_acc[i].errou();
+		    this.indicadores[i].errou();
+		    acertou = false;
+		}
 		
 		// Se usa SlidingWindow - calcula a diversidade aqui!
 		if (usaSlidingWindow)
@@ -415,6 +445,10 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 			//Calculo
 			this.ensemble_diversidade[i].calcula(ensemble.getSubClassifiers(), inst);
 		}
+		
+		Diversidades diversidades = new Diversidades();
+		diversidades.setAmbiguidade(this.ensemble_diversidade[i].getDiv());
+		resultadosEnsembles[i].registra(iteracao, diversidades, indicadores[i], acertou, null);
 		
 		ensemble.trainOnInstance(inst);
 		return ensemble;
@@ -546,27 +580,12 @@ public class MetodoClassificadorV13 extends AbstractClassifier implements Detect
 	public double getUltimoEnsembleSelecionadoLambda() {
 		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].lambdaOption.getValue();
 	}
-	
-	
+
+	@Override
+	public List<Resultado> getEnsemblesResultados() {
+		return new ArrayList<Resultado>(Arrays.asList(this.resultadosEnsembles));
+	}
 	
 
-	// @Override
-	// public double[] getEnsembleDiversidade() {
-	// double[] ensembleDiversidade = new double[this.ensemblesNum];
-	// for (int i = 0; i < ensembleDiversidade.length ; i++) {
-	// ensembleDiversidade[i] = this.ensemble[i].ultimaMedidaCalculo;
-	// }
-	// return ensembleDiversidade;
-	// }
-	//
-	// @Override
-	// public int[] getEnsembleClass() {
-	// int[] ensembleClass = new int[this.ensemblesNum];
-	// for (int i = 0; i < ensembleClass.length ; i++) {
-	// ensembleClass[i] =
-	// Utils.maxIndex(this.ensemble[i].medidaCalculo.votos_acumulados);
-	// }
-	// return ensembleClass;
-	// }
 
 }
