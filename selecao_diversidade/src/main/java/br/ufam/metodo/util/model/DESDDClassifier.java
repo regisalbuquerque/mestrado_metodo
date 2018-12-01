@@ -1,8 +1,7 @@
-package br.ufam.metodos.v13;
+package br.ufam.metodo.util.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import com.github.javacliparser.FloatOption;
@@ -13,21 +12,14 @@ import com.yahoo.labs.samoa.instances.Instance;
 import br.ufam.diversidade.MedidaCalculo;
 import br.ufam.diversidade.MedidaCalculoFactory;
 import br.ufam.metodo.diversidade.util.Diversidades;
-import br.ufam.metodo.util.calculo.Acuracia;
 import br.ufam.metodo.util.calculo.AcuraciaPrequencial;
 import br.ufam.metodo.util.calculo.DiversidadePrequencial;
-import br.ufam.metodo.util.calculo.Matematica;
 import br.ufam.metodo.util.dados.BufferInstancias;
 import br.ufam.metodo.util.drift.DetectorDrift;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
 import br.ufam.metodo.util.medidor.Indicadores;
 import br.ufam.metodo.util.medidor.Resultado;
-import br.ufam.metodo.util.model.DESDDClassifier;
-import br.ufam.metodo.util.model.Ensemble;
-import br.ufam.metodo.util.model.EnsembleValor;
-import br.ufam.metodo.util.model.IEnsembleSelection;
-import br.ufam.metodo.util.model.IEnsemblesResultados;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
@@ -35,40 +27,17 @@ import moa.core.Measurement;
 import moa.core.Utils;
 import moa.options.ClassOption;
 
-/**
- *
- * @author regis Versão 13
- */
-public class MetodoClassificadorV13 extends DESDDClassifier {
+public abstract class DESDDClassifier extends AbstractClassifier implements DetectorDrift, IEnsembleSelection, IEnsemblesResultados {
 
 	private static final long serialVersionUID = 1L;
-
-	@Override
-	public String getPurposeString() {
-		return "Classifier that ...";
-	}
-
-	public static IntOption ensemblesNumberOption = new IntOption("ensemblesNumber", 'n', "The number of ensembles.", 10, 1,
+	
+	public IntOption ensemblesNumberOption = new IntOption("ensemblesNumber", 'n', "The number of ensembles.", 10, 1,
 			Integer.MAX_VALUE);
 
 	public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
 			Integer.MAX_VALUE);
 
-//	public ListOption lambdasOption = new ListOption("lambdaAttributes", 'y',
-//			"Lambdas of ensembles. Enter comma seperated list, ", new FloatOption("lambdaAttribute", ' ', "Lambda", 1),
-//			new FloatOption[] { new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0),
-//					new FloatOption("", ' ', "", 1.0), new FloatOption("", ' ', "", 1.0) },
-//			',');
-	
-	public static FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
-            "Limite Inferior Lambda", 1);
-	
-	public static FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
-            "Limite Superior Lambda", 1);
-	
+
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
 
@@ -86,14 +55,12 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 
 	public MultiChoiceOption selectionOptionEstrategiaRecuperacao = new MultiChoiceOption(
 			"SelectionEstrategiaRecuperacao", 'r', "SelectionEstrategiaRecuperacao.",
-			new String[] { "SimpleReset", "SimpleResetEnsemble", "SimpleResetSystem", "SimpleResetSystem1Detector", "RetreinaTodosComBufferWarning",
-					"RemoveEnsembleMenosAcurados" },
+			new String[] { "SimpleReset", "SimpleResetEnsemble", "SimpleResetSystem", "SimpleResetSystem1Detector", "RetreinaTodosComBufferWarning" },
 			new String[] { "Quando encontra drift, reseta o pior classificador",
 					"Quando encontra drift, reseta o ensemble", 
 					"Quando encontra drift, reseta o sistema todo",
 					"Quando encontra drift, reseta o sistema todo 1 detector",
-					"Quando encontra drift, reseta o sistema todo e treina todos com BufferWarning",
-					"Quando encontra drift, reseta ensembles menos acurados" },
+					"Quando encontra drift, reseta o sistema todo e treina todos com BufferWarning" },
 			0);
 
 	public IntOption ensemblesNumRemoverRecuperacaoOption = new IntOption("ensembleNumRemoverRecuperacao", 'q',
@@ -119,15 +86,19 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	public ClassOption baseLearner5Option = new ClassOption("baseLearner5", '5', "Classifier to train.",
 			Classifier.class, "trees.HoeffdingTree");
 
+	
+	
+	protected double[] lambdas;
+
 	// protected Ensembles ensembles;
 	protected Ensemble[] poolOfEnsembles;
 	protected int ultimoEnsembleSelecionadoIndex;
 
-	AcuraciaPrequencial[] ensemble_acc;
-	DiversidadePrequencial[] ensemble_diversidade;
-	boolean usaSlidingWindow;
+	protected AcuraciaPrequencial[] ensemble_acc;
+	protected DiversidadePrequencial[] ensemble_diversidade;
+	protected boolean usaSlidingWindow;
 
-	private int ultimoDrift = -1;
+	protected int ultimoDrift = -1;
 
 	protected BufferInstancias BufferWarning;
 
@@ -142,83 +113,83 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	public static final int DDM_WARNING_LEVEL = 1;
 
 	public static final int DDM_OUTCONTROL_LEVEL = 2;
-	
-	public static double[] lambdas;
-	
-	public static Double LAMBDA_MIN = null;
-	
-	public static Double LAMBDA_MAX = null;
-	
-	public static String LAMBDAS_csv = "";
-	
-	public static Integer LAMBDAS_NUM = null;
 
 	protected int changeDetected = 0;
 
 	protected int warningDetected = 0;
 
-	private int iteracao = 0;
+	protected int iteracao = 0;
 
 	protected MedidaSelecao medidaSelecao;
-
 	protected MedidaCalculo medidaCalculo;
+	
 	
 	public Indicadores[] indicadores = null;
 	public Resultado[] resultadosEnsembles = null;
 	
-	public static void setupLambdas()
-	{
-		if (LAMBDAS_NUM == null || LAMBDAS_NUM != ensemblesNumberOption.getValue() )
-		{
-			LAMBDAS_NUM = ensemblesNumberOption.getValue();
-		}
-		
-		if (LAMBDA_MIN == null || LAMBDA_MIN != lambdaMinOption.getValue())
-		{
-			LAMBDA_MIN = lambdaMinOption.getValue();
-		}
-		
-		if (LAMBDA_MAX == null || LAMBDA_MAX != lambdaMaxOption.getValue())
-		{
-			LAMBDA_MAX = lambdaMaxOption.getValue();
-		}
-	}
-	
-	public static void gerarLambdas()
-	{
-		setupLambdas();
-		
-		System.out.println("Gerando LAMBDAS ************* ");
-		lambdas = new double[LAMBDAS_NUM];
-		for (int i = 0; i < LAMBDAS_NUM; i++) {
-			lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
-		}
-	}
-	
-	public static void mostrarLambdas()
-	{
-		System.out.println("LAMBDAS : ");
-		for (int i = 0; i < LAMBDAS_NUM; i++) {
-			System.out.println(" " + lambdas[i]);
-		}
-		System.out.println("-----------------------");
-	}
 	
 	@Override
 	public void resetLearningImpl() {
-		
+
 		medidaSelecao = MedidaSelecaoFactory.fabrica(this.selectionOptionEstrategiaSelecao.getChosenLabel());
 		medidaCalculo = MedidaCalculoFactory.fabrica(this.selectionOptionMedidaCalculo.getChosenLabel());
 
 		this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
 		this.newBufferReset = false;
 
-		estrategiaInicial();
-
+		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
 		this.BufferWarning = new BufferInstancias();
+		
+		setupLambdas();
+		
+		estrategiaInicial();
 	}
+	
+	public abstract void setupLambdas();
+	
+	protected void estrategiaInicial() {
 
-	private Ensemble cria_novo_ensemble(double lambda) {
+		this.indicadores = new Indicadores[this.poolOfEnsembles.length];
+		if (resultadosEnsembles == null)
+			resultadosEnsembles = new Resultado[ensemblesNumberOption.getValue()];
+		
+		
+		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
+		this.ensemble_diversidade = new DiversidadePrequencial[this.poolOfEnsembles.length];
+		
+
+		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+			inicializa_ensemble(i);
+		}
+
+	}
+	
+	protected void inicializa_ensemble(int i) {
+		this.indicadores[i] = new Indicadores();
+		if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
+		{
+			resultadosEnsembles[i] = new Resultado();
+			resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
+		}
+		
+		this.poolOfEnsembles[i] = cria_novo_ensemble(this.lambdas[i]);
+		this.ensemble_acc[i] = new AcuraciaPrequencial();
+		if (medidaCalculoJanela.getValue() == -1)
+		{
+			//Sem Janela
+			this.usaSlidingWindow = false;
+			this.ensemble_diversidade[i] = new DiversidadePrequencial(this.ensembleSizeOption.getValue(), null, medidaCalculo);
+		}
+		else
+		{
+			//Com Janela
+			this.usaSlidingWindow = true;
+			this.ensemble_diversidade[i] = new DiversidadePrequencial(this.ensembleSizeOption.getValue(), medidaCalculoJanela.getValue(), medidaCalculo);
+		}
+		
+	}
+	
+	protected Ensemble cria_novo_ensemble(double lambda) {
 		Ensemble ensemble = new Ensemble();
 		ensemble.lambdaOption.setValue(lambda);
 		ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
@@ -237,104 +208,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 
 		return ensemble;
 	}
-
-	private void estrategiaInicial() {
-
-		this.poolOfEnsembles = new Ensemble[ensemblesNumberOption.getValue()];
-		
-		setupLambdas();
-		mostrarLambdas();
-		
-		this.indicadores = new Indicadores[this.poolOfEnsembles.length];
-		if (resultadosEnsembles == null)
-			resultadosEnsembles = new Resultado[ensemblesNumberOption.getValue()];
-		
-		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
-		this.ensemble_diversidade = new DiversidadePrequencial[this.poolOfEnsembles.length];
-		
-		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-			inicializa_ensemble(i);
-		}
-
-	}
-
-	private void inicializa_ensemble(int i) {
-		this.indicadores[i] = new Indicadores();
-		if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
-		{
-			resultadosEnsembles[i] = new Resultado();
-			resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
-		}
-		
-		this.poolOfEnsembles[i] = cria_novo_ensemble(lambdas[i]);
-		this.ensemble_acc[i] = new AcuraciaPrequencial();
-		if (medidaCalculoJanela.getValue() == -1)
-		{
-			//Sem Janela
-			this.usaSlidingWindow = false;
-			this.ensemble_diversidade[i] = new DiversidadePrequencial(this.ensembleSizeOption.getValue(), null, medidaCalculo);
-		}
-		else
-		{
-			//Com Janela
-			this.usaSlidingWindow = true;
-			this.ensemble_diversidade[i] = new DiversidadePrequencial(this.ensembleSizeOption.getValue(), medidaCalculoJanela.getValue(), medidaCalculo);
-		}
-		
-	}
-
-	private void estrategiaRemoveMenosAcurados(List<Instance> listaInstancias, int numEnsemblesRemover) {
-
-		// Acurácia medida através do BufferWarning
-		List<EnsembleValor> listaTemporaria = new ArrayList<>();
-		for (Ensemble ensembleItem : this.poolOfEnsembles) {
-			listaTemporaria
-					.add(new EnsembleValor(Acuracia.calculaAcuracia(listaInstancias, ensembleItem), ensembleItem));
-		}
-
-		Collections.sort(listaTemporaria); // Ordena do menor pro maior
-
-		Ensemble[] ensemblesTemporario = new Ensemble[this.poolOfEnsembles.length];
-
-		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-
-			if (i < numEnsemblesRemover) { // Cria um novo
-				ensemblesTemporario[i] = cria_novo_ensemble(listaTemporaria.get(i).ensemble.lambda); // Usa o lambda que
-																										// está sendo
-																										// removido(listaTemporaria)
-																										// para poder
-																										// manter a
-																										// mesma
-																										// configuração
-																										// de lambdas
-																										// inicial
-				this.indicadores[i] = new Indicadores();
-				this.ensemble_acc[i] = new AcuraciaPrequencial();
-				
-			} else { // Mantem o Ensemble
-				ensemblesTemporario[i] = listaTemporaria.get(i).ensemble;
-			}
-		}
-
-		// Ordenar o vetor de acordo com a ordem do lambda inicial - Isso faz diferença
-		for (int i = 0; i < this.lambdas.length; i++) {
-			double lambdaValor = this.lambdas[i];
-			Ensemble ensembleEncontrado = null;
-
-			for (int j = 0; j < ensemblesTemporario.length; j++) {
-				if (ensemblesTemporario[j] != null && lambdaValor == ensemblesTemporario[j].lambda) {
-					ensembleEncontrado = ensemblesTemporario[j];
-					ensemblesTemporario[j] = null; // Para não ser encontrado novamente em caso de lambdas repetido
-					break;
-				}
-			}
-			if (ensembleEncontrado == null)
-				throw new RuntimeException("ERRO! Ensemble não preenchido após o DRIFT. NULL");
-			this.poolOfEnsembles[i] = ensembleEncontrado;
-		}
-
-	}
-
+	
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
 
@@ -417,14 +291,16 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 
 	}
 
-	private Ensemble treinarEnsemble(Instance inst, int i) {
+	protected Ensemble treinarEnsemble(Instance inst, int i) {
 		Ensemble ensemble = this.poolOfEnsembles[i];
 
-		 boolean acertou;
+		boolean acertou;
+		
 		//Antes de treinar - calcula ACC[]
 		int trueClass = (int) inst.classValue();
 		double[] votos = ensemble.getVotesForInstance(inst);
-		if (Utils.maxIndex(votos) == trueClass) {
+		if (Utils.maxIndex(votos) == trueClass)
+		{
 		    this.ensemble_acc[i].acertou();
 		    this.indicadores[i].acertou();
 		    acertou = true;
@@ -451,7 +327,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 		return ensemble;
 	}
 
-	private void executaEstrategia(List<Integer> ensemblesComDrift, BufferInstancias bufferWarning) {
+	protected void executaEstrategia(List<Integer> ensemblesComDrift, BufferInstancias bufferWarning) {
 
 		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleReset"))
         {
@@ -489,18 +365,6 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 
 			}
 		
-		} else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("RemoveEnsembleMenosAcurados")) {
-			int numEnsemblesRemover = this.poolOfEnsembles.length / 2;
-			if (ensemblesNumRemoverRecuperacaoOption.getValue() != -1)
-				numEnsemblesRemover = ensemblesNumRemoverRecuperacaoOption.getValue();
-
-			estrategiaRemoveMenosAcurados(bufferWarning.getInstancias(), numEnsemblesRemover);
-
-			// Treino com Buffer WARNING
-			while (bufferWarning.hasElementos()) {
-				Instance instance = bufferWarning.getProximaInstancia();
-				trainOnInstanceImpl(instance);
-			}
 		}
 
 	}
@@ -527,6 +391,8 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].getVotesForInstance(inst);
 
 	}
+	
+
 
 	@Override
 	public boolean isRandomizable() {
@@ -577,12 +443,11 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	public double getUltimoEnsembleSelecionadoLambda() {
 		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].lambdaOption.getValue();
 	}
-
+	
 	@Override
 	public List<Resultado> getEnsemblesResultados() {
 		return new ArrayList<Resultado>(Arrays.asList(this.resultadosEnsembles));
 	}
-	
 
 
 }
