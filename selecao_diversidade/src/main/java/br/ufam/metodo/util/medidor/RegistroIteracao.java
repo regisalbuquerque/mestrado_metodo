@@ -5,6 +5,7 @@ import br.ufam.metodo.diversidade.util.Diversidades;
 
 public class RegistroIteracao {
     private final int iteracao;
+    private String codigo;
     private final Diversidades diversidades;
     private final double taxaAcerto;
     private final double taxaErro;
@@ -17,6 +18,7 @@ public class RegistroIteracao {
     private final double desvioErroPrequencial;
 
     public RegistroIteracao(int iteracao, 
+    		String codigo,
     		Diversidades diversidades, 
     		double taxaAcerto, 
     		double taxaErro, 
@@ -26,6 +28,7 @@ public class RegistroIteracao {
     		double erroPrequencial, 
     		double desvioErroPrequencial,
     		Double lambdaSelecionado) {
+    	this.codigo = codigo;
         this.iteracao = iteracao;
         this.diversidades = diversidades;
         this.taxaAcerto = taxaAcerto;
@@ -37,8 +40,15 @@ public class RegistroIteracao {
         this.desvioErroPrequencial = desvioErroPrequencial;
         this.lambdaSelecionado = lambdaSelecionado;
     }
+    
+    
 
-    public int getIteracao() {
+    public String getCodigo() {
+		return codigo;
+	}
+
+
+	public int getIteracao() {
         return iteracao;
     }
 

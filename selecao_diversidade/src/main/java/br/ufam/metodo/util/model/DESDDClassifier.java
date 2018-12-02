@@ -147,6 +147,19 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	public abstract void setupLambdas();
 	
+	public void randomizaLambdasEnsembles() {
+		System.out.println("ATENÇÃO: Randomização dos Ensembles Desligada!");
+	}
+	
+	public void mostrarLambdas()
+	{
+		System.out.println("LAMBDAS : ");
+		for (int i = 0; i < this.lambdas.length; i++) {
+			System.out.println(" " + lambdas[i]);
+		}
+		System.out.println("-----------------------");
+	}
+	
 	protected void estrategiaInicial() {
 
 		this.indicadores = new Indicadores[this.poolOfEnsembles.length];
@@ -169,8 +182,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
 		{
 			resultadosEnsembles[i] = new Resultado();
-			resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
 		}
+		resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
 		
 		this.poolOfEnsembles[i] = cria_novo_ensemble(this.lambdas[i]);
 		this.ensemble_acc[i] = new AcuraciaPrequencial();
@@ -256,6 +269,9 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			default:
 
 			}
+			
+			//Randomizar Lambdas // Se o método for sobrescrito
+			this.randomizaLambdasEnsembles();
 
 			// Treinar o POOL
 			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
@@ -267,6 +283,10 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			
 			boolean detectDrift = false;
 	    	List<Integer> ensemblesComDrift = new ArrayList<>(); 
+	    	
+	    	//Randomizar Lambdas // Se o método for sobrescrito
+			this.randomizaLambdasEnsembles();
+	    	
 	        for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 	        	
 	        	Ensemble ensemble = treinarEnsemble(inst, i);
@@ -321,7 +341,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 		Diversidades diversidades = new Diversidades();
 		diversidades.setAmbiguidade(this.ensemble_diversidade[i].getDiv());
-		resultadosEnsembles[i].registra(iteracao, diversidades, indicadores[i], acertou, null);
+		resultadosEnsembles[i].registra(iteracao, Double.toString(lambdas[i]), diversidades, indicadores[i], acertou, null);
+		resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i])); //Setar o código
 		
 		ensemble.trainOnInstance(inst);
 		return ensemble;

@@ -35,18 +35,18 @@ public class Resultado{
         logDrifts.add(iteracao);
     }
     
-    public void registra(int iteracao, Diversidades diversidades, Indicadores indicadores, boolean acertou, Double lambdaSelecionado)
+    public void registra(int iteracao, String codigo, Diversidades diversidades, Indicadores indicadores, boolean acertou, Double lambdaSelecionado)
     {
-        listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, diversidades, indicadores.getTaxaAcertoAtual(), 
+        listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, codigo, diversidades, indicadores.getTaxaAcertoAtual(), 
         		indicadores.getTaxaErroAtual(), acertou, indicadores.getAcuraciaPrequencial(), 
         		indicadores.getDesvioAcuraciaPrequencial(), indicadores.getErroPrequencial(), indicadores.getDesvioErroPrequencial(),
         		lambdaSelecionado));
     }
     
-    public void registra(int iteracao, Diversidades diversidades, double taxaAcerto, double taxaErro, boolean acertou,
+    public void registra(int iteracao, String codigo, Diversidades diversidades, double taxaAcerto, double taxaErro, boolean acertou,
     		double acuraciaPrequencial, double desvioAcuraciaPrequencial, double erroPrequencial, double desvioErroPrequencial, Double lambdaSelecionado)
     {
-        listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, diversidades, taxaAcerto, taxaErro, 
+        listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, codigo, diversidades, taxaAcerto, taxaErro, 
         		acertou, acuraciaPrequencial, desvioAcuraciaPrequencial, erroPrequencial, desvioErroPrequencial, lambdaSelecionado));
     }
 
