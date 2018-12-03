@@ -148,7 +148,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	public abstract void setupLambdas();
 	
 	public void randomizaLambdasEnsembles() {
-		System.out.println("ATENÇÃO: Randomização dos Ensembles Desligada!");
+		//System.out.println("ATENÇÃO: Randomização dos Ensembles Desligada!");
 	}
 	
 	public void mostrarLambdas()
