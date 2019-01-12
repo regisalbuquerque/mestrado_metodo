@@ -64,5 +64,10 @@ public abstract class AbstractEnsemble extends AbstractClassifier{
                 "Leveraging Subagging using resampling without replacement."
             }, 0);
     
+    
+    public abstract boolean detectouDrift();
+    
+    public abstract void estrategiaSimpleReset();
+    
 
 }

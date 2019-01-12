@@ -11,6 +11,8 @@ import br.ufam.metodo.util.model.DESDDClassifier;
  */
 public class MetodoClassificadorV14 extends DESDDClassifier {
 
+	private static final long serialVersionUID = 1L;
+
 	@Override
 	public String getPurposeString() {
 		return "Classifier that ...";
@@ -19,7 +21,7 @@ public class MetodoClassificadorV14 extends DESDDClassifier {
 	public FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
             "Limite Inferior Lambda", 1);
 	
-	public FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
+	public FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 't',
             "Limite Superior Lambda", 1);
 
 	

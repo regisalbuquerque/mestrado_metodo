@@ -7,7 +7,6 @@ import java.util.List;
 import com.github.javacliparser.FlagOption;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
-import com.github.javacliparser.ListOption;
 import com.github.javacliparser.MultiChoiceOption;
 import com.yahoo.labs.samoa.instances.Instance;
 
@@ -56,7 +55,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	public IntOption medidaCalculoJanela = new IntOption("janelaCalculo", 'j',
 			"Sliding Window w", -1, -1, Integer.MAX_VALUE);
 
-	public MultiChoiceOption selectionOptionEstrategiaSelecao = new MultiChoiceOption("SelectionEstrategiaSelecao", 'o',
+	public MultiChoiceOption selectionOptionEstrategiaSelecao = new MultiChoiceOption("SelectionEstrategiaSelecao", 'z',
 			"SelectionEstrategiaSelecao.", new String[] { "Menor", "Maior", "Media", "Mediana", "Pareto" },
 			new String[] { "Menor", "Maior", "Media", "Mediana", "Pareto" }, 0);
 
@@ -94,14 +93,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			Classifier.class, "trees.HoeffdingTree");
 
 	
-	//PARA O LEVERAGING BAGGING
-    public ListOption weightShrinkOptionList = new ListOption("weightShrinks", 'w',
-            "The number to use to compute the weight of new instances. Enter comma seperated list, ",
-            new FloatOption("weightShrink", ' ', "WeightShrink", 6),
-            new FloatOption[]{
-                new FloatOption("weightShrink", ' ', "WeightShrink", 6)
-            },
-            ',');
+	//PARA O LB:
+	
     // Leveraging Bagging MC: uses this option to use Output Codes
     public FlagOption outputCodesOption = new FlagOption("outputCodes", 'o',
             "Use Output Codes to use binary classifiers.");
@@ -275,9 +268,13 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		ensemble.baseLearner5Option.setValueViaCLIString(this.baseLearner5Option.getValueAsCLIString());
 		ensemble.setRandomSeed(this.randomSeed);
 		
+		
         ensemble.baseLearnerOption.setValueViaCLIString(this.baseLearner1Option.getValueAsCLIString());
         //ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
-        ensemble.weightShrinkOption.setValue(lambda);
+        
+        //LAMBDA
+        ensemble.weightShrinkOption.setValue(lambda); 
+        
         ensemble.deltaAdwinOption.setValue(this.deltaAdwinOption.getValue());
         ensemble.outputCodesOption.setValue(this.outputCodesOption.isSet());
         ensemble.leveraginBagAlgorithmOption.setChosenIndex(this.leveraginBagAlgorithmOption.getChosenIndex());
@@ -357,7 +354,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	    	
 	        for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 	        	
-	        	Ensemble ensemble = treinarEnsemble(inst, i);
+	        	AbstractEnsemble ensemble = treinarEnsemble(inst, i);
 	            
 	            if (ensemble.detectouDrift())
 	            {
@@ -379,8 +376,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	}
 
-	protected Ensemble treinarEnsemble(Instance inst, int i) {
-		Ensemble ensemble = this.poolOfEnsembles[i];
+	protected AbstractEnsemble treinarEnsemble(Instance inst, int i) {
+		AbstractEnsemble ensemble = this.poolOfEnsembles[i];
 
 		boolean acertou;
 		
@@ -465,7 +462,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
         if (!usaSlidingWindow)
         {
         	for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-        		Ensemble ensemble = this.poolOfEnsembles[i];
+        		AbstractEnsemble ensemble = this.poolOfEnsembles[i];
             	//Calculo
             	this.ensemble_diversidade[i].calcula(ensemble.getSubClassifiers(), inst);
             }
