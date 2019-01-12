@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.github.javacliparser.FlagOption;
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
+import com.github.javacliparser.ListOption;
 import com.github.javacliparser.MultiChoiceOption;
 import com.yahoo.labs.samoa.instances.Instance;
 
@@ -20,6 +22,7 @@ import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
 import br.ufam.metodo.util.medidor.Indicadores;
 import br.ufam.metodo.util.medidor.Resultado;
+import br.ufam.metodos.leveraging.v2.LeveragingBagModificado;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
@@ -38,6 +41,10 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			Integer.MAX_VALUE);
 
 
+	public MultiChoiceOption selectionOptionEstrategiaGeracao = new MultiChoiceOption("SelectionEstrategiaGeracao", 'g',
+			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "LeverageBagging"},
+			new String[] { "OnlineBagging", "LeverageBagging"}, 0);
+	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
 
@@ -87,11 +94,36 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			Classifier.class, "trees.HoeffdingTree");
 
 	
+	//PARA O LEVERAGING BAGGING
+    public ListOption weightShrinkOptionList = new ListOption("weightShrinks", 'w',
+            "The number to use to compute the weight of new instances. Enter comma seperated list, ",
+            new FloatOption("weightShrink", ' ', "WeightShrink", 6),
+            new FloatOption[]{
+                new FloatOption("weightShrink", ' ', "WeightShrink", 6)
+            },
+            ',');
+    // Leveraging Bagging MC: uses this option to use Output Codes
+    public FlagOption outputCodesOption = new FlagOption("outputCodes", 'o',
+            "Use Output Codes to use binary classifiers.");
+    
+    public MultiChoiceOption leveraginBagAlgorithmOption = new MultiChoiceOption(
+            "leveraginBagAlgorithm", 'm', "Leveraging Bagging to use.", new String[]{
+                "LeveragingBag", "LeveragingBagME", "LeveragingBagHalf", "LeveragingBagWT", "LeveragingSubag"},
+            new String[]{"Leveraging Bagging for evolving data streams using ADWIN",
+                "Leveraging Bagging ME using weight 1 if misclassified, otherwise error/(1-error)",
+                "Leveraging Bagging Half using resampling without replacement half of the instances",
+                "Leveraging Bagging WT without taking out all instances.",
+                "Leveraging Subagging using resampling without replacement."
+            }, 0);
+    
+    
+	
+	
 	
 	protected double[] lambdas;
 
-	// protected Ensembles ensembles;
-	protected Ensemble[] poolOfEnsembles;
+	protected AbstractEnsemble[] poolOfEnsembles;
+	
 	protected int ultimoEnsembleSelecionadoIndex;
 
 	protected AcuraciaPrequencial[] ensemble_acc;
@@ -137,7 +169,20 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
 		this.newBufferReset = false;
 
-		this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
+		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
+		{
+			this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
+		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
+		{
+			this.poolOfEnsembles = new LeveragingBagModificado[this.ensemblesNumberOption.getValue()];
+		}
+		else
+		{
+			throw new RuntimeException("ERROR! Estrategia de geracao INVALIDA!");
+		}
+		
+		
 		this.BufferWarning = new BufferInstancias();
 		
 		setupLambdas();
@@ -202,8 +247,23 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 	}
 	
-	protected Ensemble cria_novo_ensemble(double lambda) {
-		Ensemble ensemble = new Ensemble();
+	protected AbstractEnsemble cria_novo_ensemble(double lambda) {
+		
+		AbstractEnsemble ensemble;
+		
+		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
+		{
+			ensemble = new Ensemble();
+		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
+		{
+			ensemble = new LeveragingBagModificado();
+		}
+		else
+		{
+			throw new RuntimeException("ERROR! Estrategia de geracao INVALIDA!");
+		}
+		
 		ensemble.lambdaOption.setValue(lambda);
 		ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
 		ensemble.numBaseLeanersOption.setValue(this.numBaseLeanersOption.getValue());
@@ -214,6 +274,14 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		ensemble.baseLearner4Option.setValueViaCLIString(this.baseLearner4Option.getValueAsCLIString());
 		ensemble.baseLearner5Option.setValueViaCLIString(this.baseLearner5Option.getValueAsCLIString());
 		ensemble.setRandomSeed(this.randomSeed);
+		
+        ensemble.baseLearnerOption.setValueViaCLIString(this.baseLearner1Option.getValueAsCLIString());
+        //ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
+        ensemble.weightShrinkOption.setValue(lambda);
+        ensemble.deltaAdwinOption.setValue(this.deltaAdwinOption.getValue());
+        ensemble.outputCodesOption.setValue(this.outputCodesOption.isSet());
+        ensemble.leveraginBagAlgorithmOption.setChosenIndex(this.leveraginBagAlgorithmOption.getChosenIndex());
+        //ensemble.setRandomSeed(this.randomSeed);
 		
 		
 		ensemble.prepareForUse();

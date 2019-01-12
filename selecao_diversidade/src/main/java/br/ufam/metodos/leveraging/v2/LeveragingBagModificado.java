@@ -29,6 +29,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import com.yahoo.labs.samoa.instances.Instance;
 
+import br.ufam.metodo.util.model.AbstractEnsemble;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
@@ -45,7 +46,7 @@ import moa.options.*;
  * @author Albert Bifet (abifet at cs dot waikato dot ac dot nz)
  * @version $Revision: 7 $
  */
-public class LeveragingBagModificado extends AbstractClassifier {
+public class LeveragingBagModificado extends AbstractEnsemble{
 
     private static final long serialVersionUID = 1L;
 
@@ -54,31 +55,7 @@ public class LeveragingBagModificado extends AbstractClassifier {
         return "Leveraging Bagging for evolving data streams using ADWIN.";
     }
 
-    public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l',
-            "Classifier to train.", Classifier.class, "trees.HoeffdingTree");
 
-    public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's',
-            "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);
-
-    public FloatOption weightShrinkOption = new FloatOption("weightShrink", 'w',
-            "The number to use to compute the weight of new instances.", 6, 0.0, Float.MAX_VALUE);
-
-    public FloatOption deltaAdwinOption = new FloatOption("deltaAdwin", 'a',
-            "Delta of Adwin change detection", 0.002, 0.0, 1.0);
-
-    // Leveraging Bagging MC: uses this option to use Output Codes
-    public FlagOption outputCodesOption = new FlagOption("outputCodes", 'o',
-            "Use Output Codes to use binary classifiers.");
-
-    public MultiChoiceOption leveraginBagAlgorithmOption = new MultiChoiceOption(
-            "leveraginBagAlgorithm", 'm', "Leveraging Bagging to use.", new String[]{
-                "LeveragingBag", "LeveragingBagME", "LeveragingBagHalf", "LeveragingBagWT", "LeveragingSubag"},
-            new String[]{"Leveraging Bagging for evolving data streams using ADWIN",
-                "Leveraging Bagging ME using weight 1 if misclassified, otherwise error/(1-error)",
-                "Leveraging Bagging Half using resampling without replacement half of the instances",
-                "Leveraging Bagging WT without taking out all instances.",
-                "Leveraging Subagging using resampling without replacement."
-            }, 0);
 
     protected Classifier[] ensemble;
 

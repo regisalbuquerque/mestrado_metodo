@@ -1,46 +1,17 @@
 package br.ufam.metodo.util.model;
 
-import com.github.javacliparser.FloatOption;
-import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.Instance;
-import moa.classifiers.AbstractClassifier;
+
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ADWIN;
 import moa.classifiers.core.driftdetection.DDM;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
-import moa.core.Utils;
-import moa.options.ClassOption;
 
-public class Ensemble extends AbstractClassifier{
+public class Ensemble extends AbstractEnsemble{
     
-    public FloatOption lambdaOption = new FloatOption("lambdaAttribute", 'y', "Lambda",1);
-    
-    public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's',
-            "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);
-    
-    public IntOption numBaseLeanersOption = new IntOption("numBaseLeaners", 'x',
-            "The number of baseLeaners.", 1, 1, 5);
-    
-    public FloatOption deltaAdwinOption = new FloatOption("deltaAdwin", 'a',
-            "Delta of Adwin change detection", 0.002, 0.0, 1.0);
-    
-    public ClassOption baseLearner1Option = new ClassOption("baseLearner1", '1',
-            "Classifier to train.", Classifier.class, "trees.HoeffdingTree");
-    
-    public ClassOption baseLearner2Option = new ClassOption("baseLearner2", '2',
-            "Classifier to train.", Classifier.class, "lazy.kNN");
-    
-    public ClassOption baseLearner3Option = new ClassOption("baseLearner3", '3',
-            "Classifier to train.", Classifier.class, "trees.RandomHoeffdingTree");
-    
-    public ClassOption baseLearner4Option = new ClassOption("baseLearner4", '4',
-            "Classifier to train.", Classifier.class, "functions.Perceptron");
-    
-    public ClassOption baseLearner5Option = new ClassOption("baseLearner5", '5',
-            "Classifier to train.", Classifier.class, "bayes.NaiveBayes");
-    
+
     protected Classifier[] baseLearners;
     protected Classifier[] classificadores;
     protected ADWIN[] ADError; //Para cada classificador
