@@ -21,7 +21,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	public static FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
             "Limite Inferior Lambda", 1);
 	
-	public static FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 'm',
+	public static FloatOption lambdaMaxOption = new FloatOption("lambdaSupLimit", 't',
             "Limite Superior Lambda", 1);
 	
 
@@ -37,7 +37,11 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	@Override
 	public void setupLambdas()
 	{
-		if (lambdas_static.length < this.poolOfEnsembles.length)
+		if (lambdas_static == null)
+		{
+			gerarLambdas(this.poolOfEnsembles.length);
+		}
+		if (lambdas_static == null || lambdas_static.length < this.poolOfEnsembles.length)
 			throw new RuntimeException("ERRO: Lambdas não gerados!");
 		this.lambdas = new double[this.poolOfEnsembles.length];
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
