@@ -138,6 +138,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	public static final int DDM_WARNING_LEVEL = 1;
 
 	public static final int DDM_OUTCONTROL_LEVEL = 2;
+	
+	boolean detectDrift = false;
 
 	protected int changeDetected = 0;
 
@@ -291,6 +293,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	public void trainOnInstanceImpl(Instance inst) {
 
 		this.iteracao++;
+		detectDrift = false;
 
 		//CASO Recuperação = ComBufferWarning -> USA DDM
 		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("RetreinaTodosComBufferWarning") || selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem1Detector")) {
@@ -321,6 +324,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 				break;
 
 			case DDM_OUTCONTROL_LEVEL:
+				detectDrift = true;
 				this.changeDetected++;
 				this.ultimoDrift = iteracao;
 				executaEstrategia(null, BufferWarning);
@@ -346,7 +350,6 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		else // NÃO USA DDM
 		{
 			
-			boolean detectDrift = false;
 	    	List<Integer> ensemblesComDrift = new ArrayList<>(); 
 	    	
 	    	//Randomizar Lambdas // Se o método for sobrescrito
@@ -498,9 +501,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	@Override
 	public boolean detectouDrift() {
-		if (this.ddmLevel == DDM_OUTCONTROL_LEVEL)
-			return true;
-		return false;
+		return detectDrift;
 	}
 
 	@Override
