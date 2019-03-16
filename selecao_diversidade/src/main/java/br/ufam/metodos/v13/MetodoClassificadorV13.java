@@ -1,6 +1,8 @@
 package br.ufam.metodos.v13;
 
 import com.github.javacliparser.FloatOption;
+import com.github.javacliparser.ListOption;
+import com.github.javacliparser.Option;
 
 import br.ufam.metodo.util.calculo.Matematica;
 import br.ufam.metodo.util.model.DESDDClassifier;
@@ -18,6 +20,12 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 		return "Classifier that ...";
 	}
 
+	public ListOption lambdasOption = new ListOption("lambdaAttributes", 'y',
+			"Lambdas of ensembles. Enter comma seperated list, ", 
+			new FloatOption("lambdaAttribute", ' ', "Lambda", 1),
+			new FloatOption[] {  },
+			',');
+	
 	public static FloatOption lambdaMinOption = new FloatOption("lambdaInfLimit", 'i',
             "Limite Inferior Lambda", 1);
 	
@@ -37,15 +45,29 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	@Override
 	public void setupLambdas()
 	{
-		if (lambdas_static == null)
+		
+		Option[] lambdasArray = lambdasOption.getList();
+		
+		//Verifica se possui Lambdas 
+		if (lambdasArray.length == this.poolOfEnsembles.length)
 		{
-			gerarLambdas(this.poolOfEnsembles.length);
+			this.lambdas = new double[this.poolOfEnsembles.length];
+			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+				this.lambdas[i] = ((FloatOption) lambdasArray[i]).getValue();
+			}
 		}
-		if (lambdas_static == null || lambdas_static.length < this.poolOfEnsembles.length)
-			throw new RuntimeException("ERRO: Lambdas não gerados!");
-		this.lambdas = new double[this.poolOfEnsembles.length];
-		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-			this.lambdas[i] = lambdas_static[i];
+		else // Não possui lambdas na lista - GERAR
+		{
+			if (lambdas_static == null)
+			{
+				gerarLambdas(this.poolOfEnsembles.length);
+			}
+			if (lambdas_static == null || lambdas_static.length < this.poolOfEnsembles.length)
+				throw new RuntimeException("ERRO: Lambdas não gerados!");
+			this.lambdas = new double[this.poolOfEnsembles.length];
+			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+				this.lambdas[i] = lambdas_static[i];
+			}
 		}
 	}
 	
