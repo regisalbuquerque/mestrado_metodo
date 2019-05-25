@@ -27,12 +27,31 @@ public class Matematica {
         return k - 1;
     }
     
+    
     public static double gerarNumeroAleatorio(double limInferior, double limSuperior)
 	{
 		Random r = new Random();
 		double randomValue = limInferior + (limSuperior - limInferior) * r.nextDouble();
 		
 		return randomValue;
+	}
+    
+    public static double[] gerarNumerosAleatorios(double limInferior, double limSuperior, int  quantidade)
+	{
+    	double[] numeros = new double[quantidade];
+    	
+    	double distancia = limSuperior - limInferior;
+    	double parte = distancia / (double)quantidade;
+ 	
+    	double limInferior_aux = limInferior;
+    	double limSuperior_aux = limSuperior;
+    	for (int i = 0; i < quantidade; i++) {
+			limSuperior_aux = limInferior_aux + parte;
+			numeros[i] = gerarNumeroAleatorio(limInferior_aux, limSuperior_aux);
+			limInferior_aux = limSuperior_aux;
+		}
+    	
+		return numeros;
 	}
     
     public static String gerarNumerosAleatoriosString(double limInferior, double limSuperior, int quantidade)

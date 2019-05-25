@@ -53,9 +53,12 @@ public class MetodoClassificadorV14 extends DESDDClassifier {
 	
 	public void gerarLambdas()
 	{
+		
+		double[] numeros = Matematica.gerarNumerosAleatorios(LAMBDA_MIN, LAMBDA_MAX, LAMBDAS_NUM);
+		
 		this.lambdas = new double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
-			this.lambdas[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
+			this.lambdas[i] = numeros[i];
 		}
 	}
 	

@@ -1,6 +1,6 @@
 package testes;
 
-import br.ufam.metodos.v13.MetodoClassificadorV13;
+import javax.naming.LimitExceededException;
 
 /**
  *
@@ -8,18 +8,26 @@ import br.ufam.metodos.v13.MetodoClassificadorV13;
  */
 public class Teste {
     public static void main(String[] args) {
-//        double table_scores[][] = new double[2][2];
-//        
-//        for (int i = 0; i < 2; i++) {
-//            for (int j = 0; j < 2; j++) {
-//                System.out.println(table_scores[i][j]);
-//                
-//            }
-//            
-//        }
     	
-//    	String retorno = MetodoClassificadorV13.gerarLambdas(0.001, 0.005, 10);
-//    	System.out.println(retorno);
+    	double limInferior = 0.001;
+    	double limSuperior = 100;
+    	int quantidade = 11;
     	
+    	double distancia = limSuperior - limInferior;
+    	double parte = distancia / (double)quantidade;
+    	
+    	System.out.println(distancia);
+    	System.out.println(parte);
+    	
+
+    	double limInferior_aux = limInferior;
+    	double limSuperior_aux = limSuperior;
+    	for (int i = 0; i < quantidade; i++) {
+    		System.out.println(" --- Parte " + i + " --- ");
+    		System.out.println(limInferior_aux);
+			limSuperior_aux = limInferior_aux + parte;
+			System.out.println(limSuperior_aux);
+			limInferior_aux = limSuperior_aux;
+		}
     }
 }

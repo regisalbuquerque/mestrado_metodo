@@ -88,9 +88,11 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 			LAMBDA_MAX = lambdaMaxOption.getValue();
 		}
 		
+		double[] numeros = Matematica.gerarNumerosAleatorios(LAMBDA_MIN, LAMBDA_MAX, LAMBDAS_NUM);
+		
 		lambdas_static = new double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
-			lambdas_static[i] = Matematica.gerarNumeroAleatorio(LAMBDA_MIN, LAMBDA_MAX);
+			lambdas_static[i] = numeros[i];
 		}
 	}
 
