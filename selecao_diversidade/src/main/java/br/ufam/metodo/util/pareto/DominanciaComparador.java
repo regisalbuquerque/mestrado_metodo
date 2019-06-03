@@ -36,15 +36,8 @@ public class DominanciaComparador {
 		if (solution1.getValor1() < solution2.getValor1()) {
 			dominate1 = true;
 
-			if (dominate2) {
-				return 0;
-			}
 		} else if (solution1.getValor1() > solution2.getValor1()) {
 			dominate2 = true;
-
-			if (dominate1) {
-				return 0;
-			}
 		}
 		
 		//Objective 2

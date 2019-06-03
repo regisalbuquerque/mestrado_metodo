@@ -3,7 +3,7 @@ package br.ufam.metodo.util.medidas.selecao;
 import java.util.Collections;
 import java.util.List;
 
-import br.ufam.metodo.util.pareto.ParetoFront;
+import br.ufam.metodo.util.pareto.FronteiraDePareto;
 import br.ufam.metodo.util.pareto.Solucao;
 
 public class MedidaSelecaoPareto implements MedidaSelecao{
@@ -17,7 +17,7 @@ public class MedidaSelecaoPareto implements MedidaSelecao{
             solucoes[i] = new Solucao(i, diversidades[i], acc[i]);
         }
         
-        ParetoFront paretoFront = new ParetoFront(solucoes, maximizacaoDiv, maximizacaoAcc); 
+        FronteiraDePareto paretoFront = new FronteiraDePareto(solucoes, maximizacaoDiv, maximizacaoAcc); 
         
         
         //Lista pareto front
