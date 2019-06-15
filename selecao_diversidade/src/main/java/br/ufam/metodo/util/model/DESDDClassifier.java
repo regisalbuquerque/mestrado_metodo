@@ -152,7 +152,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	
 	public Indicadores[] indicadores = null;
-	public Resultado[] resultadosEnsembles = null;
+	//public Resultado[] resultadosEnsembles = null;
 	
 	
 	@Override
@@ -203,8 +203,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	protected void estrategiaInicial() {
 
 		this.indicadores = new Indicadores[this.poolOfEnsembles.length];
-		if (resultadosEnsembles == null)
-			resultadosEnsembles = new Resultado[ensemblesNumberOption.getValue()];
+		//if (resultadosEnsembles == null)
+		//	resultadosEnsembles = new Resultado[ensemblesNumberOption.getValue()];
 		
 		
 		this.ensemble_acc = new AcuraciaPrequencial[this.poolOfEnsembles.length];
@@ -219,11 +219,11 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	protected void inicializa_ensemble(int i) {
 		this.indicadores[i] = new Indicadores();
-		if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
-		{
-			resultadosEnsembles[i] = new Resultado();
-		}
-		resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
+		//if (resultadosEnsembles[i] == null) //Para não comprometer o que já foi gravado
+		//{
+		//	resultadosEnsembles[i] = new Resultado();
+		//}
+		//resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i]));
 		
 		this.poolOfEnsembles[i] = cria_novo_ensemble(this.lambdas[i]);
 		this.ensemble_acc[i] = new AcuraciaPrequencial();
@@ -409,8 +409,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 		Diversidades diversidades = new Diversidades();
 		diversidades.setAmbiguidade(this.ensemble_diversidade[i].getDiv());
-		resultadosEnsembles[i].registra(iteracao, Double.toString(lambdas[i]), diversidades, indicadores[i], acertou, null);
-		resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i])); //Setar o código
+		//resultadosEnsembles[i].registra(iteracao, Double.toString(lambdas[i]), diversidades, indicadores[i], acertou, null);
+		//resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i])); //Setar o código
 		
 		ensemble.trainOnInstance(inst);
 		return ensemble;
@@ -533,7 +533,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	@Override
 	public List<Resultado> getEnsemblesResultados() {
-		return new ArrayList<Resultado>(Arrays.asList(this.resultadosEnsembles));
+		//return new ArrayList<Resultado>(Arrays.asList(this.resultadosEnsembles));
+		return null;
 	}
 
 
