@@ -85,8 +85,18 @@ public class Resultado{
         this.acuraciaMedia = media_taxa;
         this.acuraciaPrequencialMedia = media_acc;
     }
+    
+    
 
-    public Double getAcuraciaMedia() {
+    public void setAcuraciaMedia(Double acuraciaMedia) {
+		this.acuraciaMedia = acuraciaMedia;
+	}
+
+	public void setAcuraciaPrequencialMedia(Double acuraciaPrequencialMedia) {
+		this.acuraciaPrequencialMedia = acuraciaPrequencialMedia;
+	}
+
+	public Double getAcuraciaMedia() {
     	if (acuraciaMedia == null) calcular();
 		return acuraciaMedia;
 	}

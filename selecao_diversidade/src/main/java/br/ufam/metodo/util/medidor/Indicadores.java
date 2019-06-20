@@ -13,11 +13,16 @@ public final class Indicadores {
     private double erroPrequencialAnterior;
     private double desvioErroPrequencial;
     private double iteracoesPrequencial;
+    
+    private double soma_taxa;
+    private double soma_acc;
 
 
     public Indicadores() {
         reset();
         resetPrequencial();
+        soma_taxa = 0;
+        soma_acc = 0;
     }
 
     private void reset() {
@@ -42,6 +47,8 @@ public final class Indicadores {
         iteracoesPrequencial++;
         
         calculaPrequenciais(true);
+        
+        soma_taxas();
     }
 
     public void errou() {
@@ -51,6 +58,13 @@ public final class Indicadores {
         iteracoesPrequencial++;
         
         calculaPrequenciais(false);
+        
+        soma_taxas();
+    }
+    
+    private void soma_taxas() {
+    	soma_taxa += this.getTaxaAcertoAtual();
+    	soma_acc += this.getAcuraciaPrequencial();
     }
     
     private void calculaPrequenciais(boolean acertou)
@@ -70,6 +84,16 @@ public final class Indicadores {
         this.erroPrequencial = this.erroPrequencialAnterior + ( (predictionErro - this.erroPrequencialAnterior) / this.iteracoesPrequencial );
         this.desvioErroPrequencial = Math.sqrt( this.erroPrequencial * (1 - this.erroPrequencial) / this.iteracoesPrequencial );
         this.erroPrequencialAnterior = this.erroPrequencial;
+    }
+    
+    public double getMediaTaxaAcerto()
+    {
+    	return this.soma_taxa / this.iteracoes;
+    }
+    
+    public double getMediaAcc()
+    {
+    	return this.soma_acc / this.iteracoes;
     }
 
     public double getTaxaAcertoAtual() {
