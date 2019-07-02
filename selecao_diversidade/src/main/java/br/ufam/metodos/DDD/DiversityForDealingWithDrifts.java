@@ -3,6 +3,8 @@ package br.ufam.metodos.DDD;
 import com.github.javacliparser.FloatOption;
 import com.yahoo.labs.samoa.instances.Instance;
 
+import br.ufam.metodo.util.drift.DetectorDrift;
+
 /*
  *    DiversityForDealingWithDrifts.java
  *    Copyright (C) 2014 Federal University of Pernambuco, Pernambuco, Brazil
@@ -45,7 +47,7 @@ import weka.core.Utils;
  *
  */
 
-public class DiversityForDealingWithDrifts extends AbstractClassifier {
+public class DiversityForDealingWithDrifts extends AbstractClassifier implements DetectorDrift {
         
     private static final long serialVersionUID = 1L;
 
@@ -234,4 +236,11 @@ public class DiversityForDealingWithDrifts extends AbstractClassifier {
     protected Measurement[] getModelMeasurementsImpl() {
         return null;
     }
+    
+	@Override
+	public boolean detectouDrift() {
+		if (this.drift == DDM_OUTCONTROL_LEVEL)
+			return true;
+		return false;
+	}
 }
