@@ -2,7 +2,7 @@ package br.ufam.metodo.util.medidas.selecao;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
-import br.ufam.metodo.util.model.Ensemble;
+import br.ufam.metodo.util.model.EnsembleOnLineBagging;
 import br.ufam.metodo.util.model.EnsembleDiversidadeAcuraciaVoto;
 
 import java.util.ArrayList;

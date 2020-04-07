@@ -40,6 +40,9 @@ public abstract class AbstractEnsemble extends AbstractClassifier{
     
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l',
             "Classifier to train.", Classifier.class, "trees.HoeffdingTree");
+    
+    public FlagOption pureBoostOption = new FlagOption("pureBoost", 'p',
+            "Boost with weights only; no poisson.");
 
     //public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's',
     //        "The number of models in the bag.", 10, 1, Integer.MAX_VALUE);

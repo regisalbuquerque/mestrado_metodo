@@ -34,7 +34,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 	
 
 	
-	public static double[] lambdas_static;
+	public static Double[] lambdas_static;
 	
 	public static Double LAMBDA_MIN = null;
 	
@@ -51,7 +51,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 		//Verifica se possui Lambdas 
 		if (lambdasArray.length == this.poolOfEnsembles.length)
 		{
-			this.lambdas = new double[this.poolOfEnsembles.length];
+			this.lambdas = new Double[this.poolOfEnsembles.length];
 			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 				this.lambdas[i] = ((FloatOption) lambdasArray[i]).getValue();
 			}
@@ -64,7 +64,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 			}
 			if (lambdas_static == null || lambdas_static.length < this.poolOfEnsembles.length)
 				throw new RuntimeException("ERRO: Lambdas não gerados!");
-			this.lambdas = new double[this.poolOfEnsembles.length];
+			this.lambdas = new Double[this.poolOfEnsembles.length];
 			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 				this.lambdas[i] = lambdas_static[i];
 			}
@@ -90,7 +90,7 @@ public class MetodoClassificadorV13 extends DESDDClassifier {
 		
 		double[] numeros = Matematica.gerarNumerosAleatorios(LAMBDA_MIN, LAMBDA_MAX, LAMBDAS_NUM);
 		
-		lambdas_static = new double[LAMBDAS_NUM];
+		lambdas_static = new Double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
 			lambdas_static[i] = numeros[i];
 		}

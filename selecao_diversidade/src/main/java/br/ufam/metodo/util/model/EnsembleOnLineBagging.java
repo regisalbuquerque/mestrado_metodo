@@ -9,7 +9,7 @@ import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
 
-public class Ensemble extends AbstractEnsemble{
+public class EnsembleOnLineBagging extends AbstractEnsemble{
     
 
     protected Classifier[] baseLearners;

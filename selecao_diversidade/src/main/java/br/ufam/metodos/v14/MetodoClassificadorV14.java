@@ -38,7 +38,7 @@ public class MetodoClassificadorV14 extends DESDDClassifier {
 		LAMBDA_MIN = this.lambdaMinOption.getValue();
 		LAMBDA_MAX = this.lambdaMaxOption.getValue();
 		
-		this.lambdas = new double[this.poolOfEnsembles.length];
+		this.lambdas = new Double[this.poolOfEnsembles.length];
 		gerarLambdas();
 	}
 
@@ -56,10 +56,12 @@ public class MetodoClassificadorV14 extends DESDDClassifier {
 		
 		double[] numeros = Matematica.gerarNumerosAleatorios(LAMBDA_MIN, LAMBDA_MAX, LAMBDAS_NUM);
 		
-		this.lambdas = new double[LAMBDAS_NUM];
+		this.lambdas = new Double[LAMBDAS_NUM];
 		for (int i = 0; i < LAMBDAS_NUM; i++) {
 			this.lambdas[i] = numeros[i];
 		}
 	}
+
+
 	
 }

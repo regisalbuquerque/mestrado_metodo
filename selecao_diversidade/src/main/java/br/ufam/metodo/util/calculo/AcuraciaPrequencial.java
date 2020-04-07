@@ -44,9 +44,9 @@ public final class AcuraciaPrequencial {
         return acc;
     }
     
-    public static double[] getArray(AcuraciaPrequencial acuracias[])
+    public static Double[] getArray(AcuraciaPrequencial acuracias[])
     {
-        double array[] = new double[acuracias.length];
+        Double array[] = new Double[acuracias.length];
         for (int i = 0; i < acuracias.length; i++) {
             array[i] = acuracias[i].getAcc();
         }

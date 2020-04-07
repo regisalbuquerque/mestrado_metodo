@@ -9,7 +9,7 @@ import br.ufam.metodo.util.pareto.Solucao;
 public class MedidaSelecaoPareto implements MedidaSelecao{
     
     @Override
-    public int seleciona(double diversidades[], double acc[], boolean maximizacaoDiv, boolean maximizacaoAcc)
+    public int seleciona(Double diversidades[], Double acc[], boolean maximizacaoDiv, boolean maximizacaoAcc)
     {
         
         Solucao[] solucoes = new Solucao[diversidades.length];

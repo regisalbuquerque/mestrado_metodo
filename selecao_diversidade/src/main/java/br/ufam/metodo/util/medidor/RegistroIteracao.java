@@ -1,5 +1,8 @@
 package br.ufam.metodo.util.medidor;
 
+import java.util.Arrays;
+import java.util.List;
+
 import br.ufam.metodo.diversidade.util.Diversidades;
 
 
@@ -16,6 +19,11 @@ public class RegistroIteracao {
     private final double desvioAcuraciaPrequencial;
     private final double erroPrequencial;
     private final double desvioErroPrequencial;
+    
+    private final List<Double> listaEnsemblesLambdas;
+    private final List<Double> listaEnsemblesDiversidades;
+    private final List<Double> listaEnsemblesAcuracias;
+    
 
     public RegistroIteracao(int iteracao, 
     		String codigo,
@@ -27,7 +35,10 @@ public class RegistroIteracao {
     		double desvioAcuraciaPrequencial, 
     		double erroPrequencial, 
     		double desvioErroPrequencial,
-    		Double lambdaSelecionado) {
+    		Double lambdaSelecionado,
+    		Double[] arrayEnsemblesLambdas,
+    		Double[] arrayEnsemblesDiversidades,
+    		Double[] arrayEnsemblesAcuracias) {
     	this.codigo = codigo;
         this.iteracao = iteracao;
         this.diversidades = diversidades;
@@ -39,6 +50,9 @@ public class RegistroIteracao {
         this.erroPrequencial = erroPrequencial;
         this.desvioErroPrequencial = desvioErroPrequencial;
         this.lambdaSelecionado = lambdaSelecionado;
+        this.listaEnsemblesLambdas = Arrays.asList(arrayEnsemblesLambdas);
+        this.listaEnsemblesDiversidades = Arrays.asList(arrayEnsemblesDiversidades);
+        this.listaEnsemblesAcuracias = Arrays.asList(arrayEnsemblesAcuracias);
     }
     
     
@@ -89,4 +103,26 @@ public class RegistroIteracao {
 	public double getLambdaSelecionado() {
 		return lambdaSelecionado;
 	}
+
+
+
+	public List<Double> getListaEnsemblesDiversidades() {
+		return listaEnsemblesDiversidades;
+	}
+
+
+
+	public List<Double> getListaEnsemblesAcuracias() {
+		return listaEnsemblesAcuracias;
+	}
+
+
+
+	public List<Double> getListaEnsemblesLambdas() {
+		return listaEnsemblesLambdas;
+	}
+	
+	
+	
+	
 }

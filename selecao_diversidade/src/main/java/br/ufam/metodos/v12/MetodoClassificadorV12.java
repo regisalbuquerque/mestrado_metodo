@@ -33,7 +33,7 @@ public class MetodoClassificadorV12 extends DESDDClassifier {
 		Option[] lambdasArray = lambdasOption.getList();
 		if (lambdasArray.length < this.poolOfEnsembles.length)
 			throw new RuntimeException("ERRO encontrado no parâmetro LAMBDA(y)");
-		this.lambdas = new double[this.poolOfEnsembles.length];
+		this.lambdas = new Double[this.poolOfEnsembles.length];
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 			this.lambdas[i] = ((FloatOption) lambdasArray[i]).getValue();
 		}

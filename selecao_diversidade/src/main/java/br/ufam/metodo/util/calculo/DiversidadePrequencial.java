@@ -57,9 +57,9 @@ public class DiversidadePrequencial {
 	}
 	
 	
-	public static double[] getArray(DiversidadePrequencial diversidades[])
+	public static Double[] getArray(DiversidadePrequencial diversidades[])
     {
-        double array[] = new double[diversidades.length];
+        Double array[] = new Double[diversidades.length];
         for (int i = 0; i < diversidades.length; i++) {
             array[i] = diversidades[i].getDiv();
         }

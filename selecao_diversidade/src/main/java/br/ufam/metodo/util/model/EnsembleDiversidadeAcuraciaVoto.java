@@ -6,12 +6,12 @@ import java.util.Comparator;
 public  class EnsembleDiversidadeAcuraciaVoto
 {
     
-    public Ensemble ensemble;
+    public EnsembleOnLineBagging ensemble;
     public Double diversidade;
     public Double acuracia;
     public Integer voto;
 
-    public EnsembleDiversidadeAcuraciaVoto(Ensemble ensemble, Double diversidade, Double acuracia, Integer voto) {
+    public EnsembleDiversidadeAcuraciaVoto(EnsembleOnLineBagging ensemble, Double diversidade, Double acuracia, Integer voto) {
         this.ensemble = ensemble;
         this.diversidade = diversidade;
         this.acuracia = acuracia;

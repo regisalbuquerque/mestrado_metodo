@@ -12,7 +12,6 @@ import com.yahoo.labs.samoa.instances.Instance;
 
 import br.ufam.diversidade.MedidaCalculo;
 import br.ufam.diversidade.MedidaCalculoFactory;
-import br.ufam.metodo.diversidade.util.Diversidades;
 import br.ufam.metodo.util.calculo.AcuraciaPrequencial;
 import br.ufam.metodo.util.calculo.DiversidadePrequencial;
 import br.ufam.metodo.util.dados.BufferInstancias;
@@ -20,7 +19,6 @@ import br.ufam.metodo.util.drift.DetectorDrift;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
 import br.ufam.metodo.util.medidor.Indicadores;
-import br.ufam.metodo.util.medidor.Resultado;
 import br.ufam.metodos.leveraging.v2.LeveragingBagModificado;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
@@ -29,7 +27,7 @@ import moa.core.Measurement;
 import moa.core.Utils;
 import moa.options.ClassOption;
 
-public abstract class DESDDClassifier extends AbstractClassifier implements DetectorDrift, IEnsembleSelection, IEnsemblesResultados {
+public abstract class DESDDClassifier extends AbstractClassifier implements DetectorDrift, IEnsembleSelection {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -41,8 +39,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 
 	public MultiChoiceOption selectionOptionEstrategiaGeracao = new MultiChoiceOption("SelectionEstrategiaGeracao", 'g',
-			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "LeverageBagging"},
-			new String[] { "OnlineBagging", "LeverageBagging"}, 0);
+			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging"},
+			new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging"}, 0);
 	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
@@ -56,8 +54,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			"Sliding Window w", -1, -1, Integer.MAX_VALUE);
 
 	public MultiChoiceOption selectionOptionEstrategiaSelecao = new MultiChoiceOption("SelectionEstrategiaSelecao", 'z',
-			"SelectionEstrategiaSelecao.", new String[] { "Menor", "Maior", "Media", "Mediana", "Pareto" },
-			new String[] { "Menor", "Maior", "Media", "Mediana", "Pareto" }, 0);
+			"SelectionEstrategiaSelecao.", new String[] { "Menor", "Maior", "MaiorAcc", "Media", "Mediana", "Pareto" },
+			new String[] { "Menor", "Maior", "MaiorAcc", "Media", "Mediana", "Pareto" }, 0);
 
 	public MultiChoiceOption selectionOptionEstrategiaRecuperacao = new MultiChoiceOption(
 			"SelectionEstrategiaRecuperacao", 'r', "SelectionEstrategiaRecuperacao.",
@@ -113,12 +111,18 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	
 	
-	protected double[] lambdas;
-
+	protected Double[] lambdas;
+	
 	protected AbstractEnsemble[] poolOfEnsembles;
 	
 	protected int ultimoEnsembleSelecionadoIndex;
-
+	
+	protected Double[] ultimosLambdas;
+	
+	protected Double[] ultimasDiversidades;
+	
+	protected Double[] ultimasAccs;
+			
 	protected AcuraciaPrequencial[] ensemble_acc;
 	protected DiversidadePrequencial[] ensemble_diversidade;
 	protected boolean usaSlidingWindow;
@@ -166,7 +170,11 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
 		{
-			this.poolOfEnsembles = new Ensemble[this.ensemblesNumberOption.getValue()];
+			this.poolOfEnsembles = new EnsembleOnLineBagging[this.ensemblesNumberOption.getValue()];
+		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBoosting"))
+		{
+			this.poolOfEnsembles = new EnsembleOnLineBoosting[this.ensemblesNumberOption.getValue()];
 		}
 		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
 		{
@@ -248,7 +256,11 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
 		{
-			ensemble = new Ensemble();
+			ensemble = new EnsembleOnLineBagging();
+		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBoosting"))
+		{
+			ensemble = new EnsembleOnLineBoosting();
 		}
 		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
 		{
@@ -382,8 +394,6 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	protected AbstractEnsemble treinarEnsemble(Instance inst, int i) {
 		AbstractEnsemble ensemble = this.poolOfEnsembles[i];
 
-		boolean acertou;
-		
 		//Antes de treinar - calcula ACC[]
 		int trueClass = (int) inst.classValue();
 		double[] votos = ensemble.getVotesForInstance(inst);
@@ -391,13 +401,11 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		{
 		    this.ensemble_acc[i].acertou();
 		    this.indicadores[i].acertou();
-		    acertou = true;
 		}
 		else
 		{
 		    this.ensemble_acc[i].errou();
 		    this.indicadores[i].errou();
-		    acertou = false;
 		}
 		
 		// Se usa SlidingWindow - calcula a diversidade aqui!
@@ -406,11 +414,6 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			//Calculo
 			this.ensemble_diversidade[i].calcula(ensemble.getSubClassifiers(), inst);
 		}
-		
-		Diversidades diversidades = new Diversidades();
-		diversidades.setAmbiguidade(this.ensemble_diversidade[i].getDiv());
-		//resultadosEnsembles[i].registra(iteracao, Double.toString(lambdas[i]), diversidades, indicadores[i], acertou, null);
-		//resultadosEnsembles[i].setCodigo(Double.toString(lambdas[i])); //Setar o código
 		
 		ensemble.trainOnInstance(inst);
 		return ensemble;
@@ -471,9 +474,14 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
             }
 		}
 
+        
+        this.ultimosLambdas = Arrays.copyOf(this.lambdas, this.lambdas.length);
+        this.ultimasDiversidades = DiversidadePrequencial.getArray(this.ensemble_diversidade);
+        this.ultimasAccs = AcuraciaPrequencial.getArray(this.ensemble_acc);
+        
 		// Faz a seleção
-		this.ultimoEnsembleSelecionadoIndex = this.medidaSelecao.seleciona( DiversidadePrequencial.getArray(this.ensemble_diversidade),
-																			AcuraciaPrequencial.getArray(this.ensemble_acc),
+		this.ultimoEnsembleSelecionadoIndex = this.medidaSelecao.seleciona( this.ultimasDiversidades,
+																			this.ultimasAccs,
 																			medidaCalculo.isMaximiza(),
 																			true);
 
@@ -532,10 +540,20 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	}
 	
 	@Override
-	public List<Resultado> getEnsemblesResultados() {
-		//return new ArrayList<Resultado>(Arrays.asList(this.resultadosEnsembles));
-		return null;
+	public Double[] getUltimasDiversidades()
+	{
+		return this.ultimasDiversidades;
 	}
-
-
+	
+	@Override
+	public Double[] getUltimasAccs()
+	{
+		return this.ultimasAccs;
+	}
+	
+	@Override
+	public Double[] getEnsemblesLambdas() {
+		return this.ultimosLambdas;
+	}
+	
 }

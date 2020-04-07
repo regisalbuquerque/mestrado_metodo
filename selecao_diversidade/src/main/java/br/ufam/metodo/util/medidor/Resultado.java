@@ -35,19 +35,19 @@ public class Resultado{
         logDrifts.add(iteracao);
     }
     
-    public void registra(int iteracao, String codigo, Diversidades diversidades, Indicadores indicadores, boolean acertou, Double lambdaSelecionado)
+    public void registra(int iteracao, String codigo, Diversidades diversidades, Indicadores indicadores, boolean acertou, Double lambdaSelecionado, Double[] listaEnsemblesLambdas, Double[] listaEnsemblesDiversidades, Double[] listaEnsemblesAcuracias)
     {
         listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, codigo, diversidades, indicadores.getTaxaAcertoAtual(), 
         		indicadores.getTaxaErroAtual(), acertou, indicadores.getAcuraciaPrequencial(), 
         		indicadores.getDesvioAcuraciaPrequencial(), indicadores.getErroPrequencial(), indicadores.getDesvioErroPrequencial(),
-        		lambdaSelecionado));
+        		lambdaSelecionado, listaEnsemblesLambdas, listaEnsemblesDiversidades, listaEnsemblesAcuracias));
     }
     
     public void registra(int iteracao, String codigo, Diversidades diversidades, double taxaAcerto, double taxaErro, boolean acertou,
-    		double acuraciaPrequencial, double desvioAcuraciaPrequencial, double erroPrequencial, double desvioErroPrequencial, Double lambdaSelecionado)
+    		double acuraciaPrequencial, double desvioAcuraciaPrequencial, double erroPrequencial, double desvioErroPrequencial, Double lambdaSelecionado, Double[] listaEnsemblesLambdas, Double[] listaEnsemblesDiversidades, Double[] listaEnsemblesAcuracias)
     {
         listaRegistrosIteracoes.add(new RegistroIteracao(iteracao, codigo, diversidades, taxaAcerto, taxaErro, 
-        		acertou, acuraciaPrequencial, desvioAcuraciaPrequencial, erroPrequencial, desvioErroPrequencial, lambdaSelecionado));
+        		acertou, acuraciaPrequencial, desvioAcuraciaPrequencial, erroPrequencial, desvioErroPrequencial, lambdaSelecionado, listaEnsemblesLambdas, listaEnsemblesDiversidades, listaEnsemblesAcuracias));
     }
 
     public List<Integer> getLogDrifts() {

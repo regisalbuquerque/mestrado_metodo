@@ -2,7 +2,7 @@ package br.ufam.metodo.util.medidas.selecao;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
-import br.ufam.metodo.util.model.Ensemble;
+import br.ufam.metodo.util.model.EnsembleOnLineBagging;
 import br.ufam.metodo.util.model.EnsembleValor;
 import br.ufam.metodo.util.pareto.Solucao;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class MedidaSelecaoMediana implements MedidaSelecao{
 
     @Override
-    public int seleciona(double[] diversidades, double[] acc, boolean maximizacaoDiv, boolean maximizacaoAcc) {
+    public int seleciona(Double[] diversidades, Double[] acc, boolean maximizacaoDiv, boolean maximizacaoAcc) {
 
         //Calcular as diversidades
         List<Solucao> lista = new ArrayList<>();

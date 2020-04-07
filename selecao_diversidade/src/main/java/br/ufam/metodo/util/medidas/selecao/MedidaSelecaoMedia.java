@@ -10,7 +10,7 @@ import java.util.TreeMap;
 public class MedidaSelecaoMedia implements MedidaSelecao{
 
     @Override
-    public int seleciona(double[] diversidades, double[] acc, boolean maximizacaoDiv, boolean maximizacaoAcc) {
+    public int seleciona(Double[] diversidades, Double[] acc, boolean maximizacaoDiv, boolean maximizacaoAcc) {
         Integer indexMedia = -1;
         Double ensembleMediaAmbiguidadeLocal = 0.0;
         Double soma = 0.0;

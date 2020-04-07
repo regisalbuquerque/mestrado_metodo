@@ -3,9 +3,9 @@ package br.ufam.metodo.util.model;
 public  class EnsembleValor implements Comparable<EnsembleValor>
 {
     public Double valor;
-    public Ensemble ensemble;
+    public EnsembleOnLineBagging ensemble;
 
-    public EnsembleValor(Double valor, Ensemble ensemble)
+    public EnsembleValor(Double valor, EnsembleOnLineBagging ensemble)
     {
         this.valor = valor;
         this.ensemble = ensemble;

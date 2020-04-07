@@ -1,5 +1,5 @@
 package br.ufam.metodo.util.medidas.selecao;
 
 public interface MedidaSelecao {
-    public int seleciona(double diversidades[], double acc[], boolean maximizacaoDiv, boolean maximizacaoAcc);
+    public int seleciona(Double diversidades[], Double acc[], boolean maximizacaoDiv, boolean maximizacaoAcc);
 }

@@ -13,6 +13,9 @@ public class MedidaSelecaoFactory {
         if (medida.equals("Maior"))
             return new MedidaSelecaoMaior();
         
+        if (medida.equals("MaiorAcc"))
+            return new MedidaSelecaoMaiorAcc();
+        
         if (medida.equals("Media"))
             return new MedidaSelecaoMedia();
         
