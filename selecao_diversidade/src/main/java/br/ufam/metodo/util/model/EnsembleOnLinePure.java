@@ -9,7 +9,7 @@ import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
 
-public class EnsembleOnLineBagging extends AbstractEnsemble{
+public class EnsembleOnLinePure extends AbstractEnsemble{
     
 
     protected Classifier[] baseLearners;
@@ -66,22 +66,9 @@ public class EnsembleOnLineBagging extends AbstractEnsemble{
         this.drift = false;  // A priori DRIFT igual a FALSE
     	
         for (int i = 0; i < this.classificadores.length; i++) {
-        	
-            int k = MiscUtils.poisson(this.lambda, classifierRandom);
-            Instance weightedInst = (Instance) inst.copy();
-            if (k > 0) {
-                weightedInst.setWeight(inst.weight() * k);
-                this.classificadores[i].trainOnInstance(weightedInst);
-            }
-            
-            
+            this.classificadores[i].trainOnInstance(inst);
+
             boolean correctlyClassifies = this.classificadores[i].correctlyClassifies(inst);
-//            double ErrEstim = this.ADError[i].getEstimation();
-//            if (this.ADError[i].setInput(correctlyClassifies ? 0 : 1)) {
-//                if (this.ADError[i].getEstimation() > ErrEstim) {
-//                    Change = true;
-//                }
-//            }
             
             this.ADError[i].setInput(correctlyClassifies ? 0 : 1); //Para poder encontrar o PIOR
             

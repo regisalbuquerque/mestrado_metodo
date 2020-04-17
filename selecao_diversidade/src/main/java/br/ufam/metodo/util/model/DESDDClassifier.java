@@ -39,8 +39,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 
 	public MultiChoiceOption selectionOptionEstrategiaGeracao = new MultiChoiceOption("SelectionEstrategiaGeracao", 'g',
-			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging"},
-			new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging"}, 0);
+			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure"},
+			new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure"}, 0);
 	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
@@ -59,8 +59,9 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	public MultiChoiceOption selectionOptionEstrategiaRecuperacao = new MultiChoiceOption(
 			"SelectionEstrategiaRecuperacao", 'r', "SelectionEstrategiaRecuperacao.",
-			new String[] { "SimpleReset", "SimpleResetEnsemble", "SimpleResetSystem", "SimpleResetSystem1Detector", "RetreinaTodosComBufferWarning" },
-			new String[] { "Quando encontra drift, reseta o pior classificador",
+			new String[] { "WorstClassifierAllEnsembles", "SimpleReset", "SimpleResetEnsemble", "SimpleResetSystem", "SimpleResetSystem1Detector", "RetreinaTodosComBufferWarning" },
+			new String[] { "Quando encontra drift, reseta o pior classificador de cada ensemble ",
+					"Quando encontra drift, reseta o pior classificador (ensembles com Drift)",
 					"Quando encontra drift, reseta o ensemble", 
 					"Quando encontra drift, reseta o sistema todo",
 					"Quando encontra drift, reseta o sistema todo 1 detector",
@@ -180,6 +181,10 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		{
 			this.poolOfEnsembles = new LeveragingBagModificado[this.ensemblesNumberOption.getValue()];
 		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("Pure"))
+		{
+			this.poolOfEnsembles = new EnsembleOnLinePure[this.ensemblesNumberOption.getValue()];
+		}
 		else
 		{
 			throw new RuntimeException("ERROR! Estrategia de geracao INVALIDA!");
@@ -265,6 +270,10 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
 		{
 			ensemble = new LeveragingBagModificado();
+		}
+		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("Pure"))
+		{
+			ensemble = new EnsembleOnLinePure();
 		}
 		else
 		{
@@ -421,7 +430,13 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	protected void executaEstrategia(List<Integer> ensemblesComDrift, BufferInstancias bufferWarning) {
 
-		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleReset"))
+		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("WorstClassifierAllEnsembles"))
+        {
+			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+				this.poolOfEnsembles[i].estrategiaSimpleReset();
+			}
+        }
+		else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleReset"))
         {
             if (!ensemblesComDrift.isEmpty()) {
             	for (Integer i: ensemblesComDrift)

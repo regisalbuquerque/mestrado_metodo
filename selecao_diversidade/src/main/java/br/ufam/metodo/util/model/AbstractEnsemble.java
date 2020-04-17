@@ -72,5 +72,4 @@ public abstract class AbstractEnsemble extends AbstractClassifier{
     
     public abstract void estrategiaSimpleReset();
     
-
 }
