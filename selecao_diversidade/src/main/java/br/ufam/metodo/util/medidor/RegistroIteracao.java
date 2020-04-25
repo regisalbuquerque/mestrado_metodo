@@ -50,13 +50,17 @@ public class RegistroIteracao {
         this.erroPrequencial = erroPrequencial;
         this.desvioErroPrequencial = desvioErroPrequencial;
         this.lambdaSelecionado = lambdaSelecionado;
-        this.listaEnsemblesLambdas = Arrays.asList(arrayEnsemblesLambdas);
-        this.listaEnsemblesDiversidades = Arrays.asList(arrayEnsemblesDiversidades);
-        this.listaEnsemblesAcuracias = Arrays.asList(arrayEnsemblesAcuracias);
+        this.listaEnsemblesLambdas = arrayEnsemblesLambdas != null ? Arrays.asList(arrayEnsemblesLambdas): null;
+        this.listaEnsemblesDiversidades = arrayEnsemblesDiversidades != null ? Arrays.asList(arrayEnsemblesDiversidades): null;
+        this.listaEnsemblesAcuracias = arrayEnsemblesAcuracias != null ? Arrays.asList(arrayEnsemblesAcuracias): null;
+    }
+    
+    public boolean possuiLambdas()
+    {
+    	return listaEnsemblesLambdas != null;
     }
     
     
-
     public String getCodigo() {
 		return codigo;
 	}

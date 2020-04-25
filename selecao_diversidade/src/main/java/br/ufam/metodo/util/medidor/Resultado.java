@@ -86,6 +86,12 @@ public class Resultado{
         this.acuraciaPrequencialMedia = media_acc;
     }
     
+    public boolean possuiLambdas()
+    {
+    	RegistroIteracao ri = getListaRegistrosIteracoes().get(0);
+    	return ri.possuiLambdas();
+    }
+    
     
 
     public void setAcuraciaMedia(Double acuraciaMedia) {
