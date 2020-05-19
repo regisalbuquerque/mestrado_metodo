@@ -1,4 +1,4 @@
-package br.ufam.metodos.v13;
+package br.ufam.metodos.DESDD;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.ListOption;

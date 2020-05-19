@@ -12,6 +12,8 @@ import com.yahoo.labs.samoa.instances.Instance;
 
 import br.ufam.diversidade.MedidaCalculo;
 import br.ufam.diversidade.MedidaCalculoFactory;
+import br.ufam.metodo.util.aprendizado.MetodoAprendizado;
+import br.ufam.metodo.util.aprendizado.MetodoAprendizadoFactory;
 import br.ufam.metodo.util.calculo.AcuraciaPrequencial;
 import br.ufam.metodo.util.calculo.DiversidadePrequencial;
 import br.ufam.metodo.util.dados.BufferInstancias;
@@ -19,7 +21,6 @@ import br.ufam.metodo.util.drift.DetectorDrift;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
 import br.ufam.metodo.util.medidor.Indicadores;
-import br.ufam.metodos.leveraging.v2.LeveragingBagModificado;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
@@ -114,7 +115,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	protected Double[] lambdas;
 	
-	protected AbstractEnsemble[] poolOfEnsembles;
+	protected IEnsembleClassifiers[] poolOfEnsembles;
 	
 	protected int ultimoEnsembleSelecionadoIndex;
 	
@@ -152,6 +153,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	protected int iteracao = 0;
 
+	protected MetodoAprendizado metodoAprendizado;
 	protected MedidaSelecao medidaSelecao;
 	protected MedidaCalculo medidaCalculo;
 	
@@ -163,33 +165,14 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	@Override
 	public void resetLearningImpl() {
 
+		metodoAprendizado = MetodoAprendizadoFactory.fabrica(this.selectionOptionEstrategiaGeracao.getChosenLabel());
 		medidaSelecao = MedidaSelecaoFactory.fabrica(this.selectionOptionEstrategiaSelecao.getChosenLabel());
 		medidaCalculo = MedidaCalculoFactory.fabrica(this.selectionOptionMedidaCalculo.getChosenLabel());
 
 		this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
 		this.newBufferReset = false;
 
-		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
-		{
-			this.poolOfEnsembles = new EnsembleOnLineBagging[this.ensemblesNumberOption.getValue()];
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBoosting"))
-		{
-			this.poolOfEnsembles = new EnsembleOnLineBoosting[this.ensemblesNumberOption.getValue()];
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
-		{
-			this.poolOfEnsembles = new LeveragingBagModificado[this.ensemblesNumberOption.getValue()];
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("Pure"))
-		{
-			this.poolOfEnsembles = new EnsembleOnLinePure[this.ensemblesNumberOption.getValue()];
-		}
-		else
-		{
-			throw new RuntimeException("ERROR! Estrategia de geracao INVALIDA!");
-		}
-		
+		this.poolOfEnsembles = metodoAprendizado.alocaPoolEnsembles(this.ensemblesNumberOption.getValue());
 		
 		this.BufferWarning = new BufferInstancias();
 		
@@ -255,52 +238,27 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 	}
 	
-	protected AbstractEnsemble cria_novo_ensemble(double lambda) {
+	protected IEnsembleClassifiers cria_novo_ensemble(double lambda) {
 		
-		AbstractEnsemble ensemble;
+		IEnsembleClassifiers ensemble = metodoAprendizado.criaNovoEnsemble();
 		
-		if (this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBagging"))
-		{
-			ensemble = new EnsembleOnLineBagging();
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("OnlineBoosting"))
-		{
-			ensemble = new EnsembleOnLineBoosting();
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("LeverageBagging"))
-		{
-			ensemble = new LeveragingBagModificado();
-		}
-		else if(this.selectionOptionEstrategiaGeracao.getChosenLabel().equals("Pure"))
-		{
-			ensemble = new EnsembleOnLinePure();
-		}
-		else
-		{
-			throw new RuntimeException("ERROR! Estrategia de geracao INVALIDA!");
-		}
-		
-		ensemble.lambdaOption.setValue(lambda);
-		ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
-		ensemble.numBaseLeanersOption.setValue(this.numBaseLeanersOption.getValue());
-		ensemble.deltaAdwinOption.setValue(this.deltaAdwinOption.getValue());
-		ensemble.baseLearner1Option.setValueViaCLIString(this.baseLearner1Option.getValueAsCLIString());
-		ensemble.baseLearner2Option.setValueViaCLIString(this.baseLearner2Option.getValueAsCLIString());
-		ensemble.baseLearner3Option.setValueViaCLIString(this.baseLearner3Option.getValueAsCLIString());
-		ensemble.baseLearner4Option.setValueViaCLIString(this.baseLearner4Option.getValueAsCLIString());
-		ensemble.baseLearner5Option.setValueViaCLIString(this.baseLearner5Option.getValueAsCLIString());
+		ensemble.setLambda(lambda);
+		ensemble.setSize(this.ensembleSizeOption.getValue());
+		ensemble.setNumBaseLearners(this.numBaseLeanersOption.getValue());
+		ensemble.setBaseLearner1(this.baseLearner1Option.getValueAsCLIString());
+		ensemble.setBaseLearner2(this.baseLearner2Option.getValueAsCLIString());
+		ensemble.setBaseLearner3(this.baseLearner3Option.getValueAsCLIString());
+		ensemble.setBaseLearner4(this.baseLearner4Option.getValueAsCLIString());
+		ensemble.setBaseLearner5(this.baseLearner5Option.getValueAsCLIString());
 		ensemble.setRandomSeed(this.randomSeed);
 		
-		
-        ensemble.baseLearnerOption.setValueViaCLIString(this.baseLearner1Option.getValueAsCLIString());
-        //ensemble.ensembleSizeOption.setValue(this.ensembleSizeOption.getValue());
         
         //LAMBDA
-        ensemble.weightShrinkOption.setValue(lambda); 
+        //ensemble.weightShrinkOption.setValue(lambda); 
         
-        ensemble.deltaAdwinOption.setValue(this.deltaAdwinOption.getValue());
-        ensemble.outputCodesOption.setValue(this.outputCodesOption.isSet());
-        ensemble.leveraginBagAlgorithmOption.setChosenIndex(this.leveraginBagAlgorithmOption.getChosenIndex());
+        //ensemble.deltaAdwinOption.setValue(this.deltaAdwinOption.getValue());
+        //ensemble.outputCodesOption.setValue(this.outputCodesOption.isSet());
+        //ensemble.leveraginBagAlgorithmOption.setChosenIndex(this.leveraginBagAlgorithmOption.getChosenIndex());
         //ensemble.setRandomSeed(this.randomSeed);
 		
 		
@@ -378,7 +336,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	    	
 	        for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 	        	
-	        	AbstractEnsemble ensemble = treinarEnsemble(inst, i);
+	        	IEnsembleClassifiers ensemble = treinarEnsemble(inst, i);
 	            
 	            if (ensemble.detectouDrift())
 	            {
@@ -400,8 +358,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	}
 
-	protected AbstractEnsemble treinarEnsemble(Instance inst, int i) {
-		AbstractEnsemble ensemble = this.poolOfEnsembles[i];
+	protected IEnsembleClassifiers treinarEnsemble(Instance inst, int i) {
+		IEnsembleClassifiers ensemble = this.poolOfEnsembles[i];
 
 		//Antes de treinar - calcula ACC[]
 		int trueClass = (int) inst.classValue();
@@ -483,7 +441,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
         if (!usaSlidingWindow)
         {
         	for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-        		AbstractEnsemble ensemble = this.poolOfEnsembles[i];
+        		IEnsembleClassifiers ensemble = this.poolOfEnsembles[i];
             	//Calculo
             	this.ensemble_diversidade[i].calcula(ensemble.getSubClassifiers(), inst);
             }
@@ -551,7 +509,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	@Override
 	public double getUltimoEnsembleSelecionadoLambda() {
-		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].lambdaOption.getValue();
+		return this.poolOfEnsembles[this.ultimoEnsembleSelecionadoIndex].getLambda();
 	}
 	
 	@Override

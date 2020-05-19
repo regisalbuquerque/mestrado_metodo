@@ -17,7 +17,7 @@
  *    along with this program. If not, see <http://www.gnu.org/licenses/>.
  *    
  */
-package br.ufam.metodos.leveraging.v2;
+package br.ufam.metodos.LB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +36,7 @@ import br.ufam.metodo.util.calculo.AcuraciaPrequencial;
 import br.ufam.metodo.util.calculo.DiversidadePrequencial;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecao;
 import br.ufam.metodo.util.medidas.selecao.MedidaSelecaoFactory;
+import br.ufam.metodos.modificados.LeveragingBagModificado;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.core.Measurement;

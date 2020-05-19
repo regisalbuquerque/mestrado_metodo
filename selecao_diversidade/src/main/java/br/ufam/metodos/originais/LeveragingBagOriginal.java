@@ -17,7 +17,7 @@
  *    along with this program. If not, see <http://www.gnu.org/licenses/>.
  *    
  */
-package br.ufam.metodos.leveraging.v1;
+package br.ufam.metodos.originais;
 
 import com.github.javacliparser.IntOption;
 import com.github.javacliparser.FloatOption;

@@ -1,4 +1,4 @@
-package br.ufam.metodos.v14;
+package br.ufam.metodos.DESDD;
 
 import com.github.javacliparser.FloatOption;
 
@@ -47,7 +47,7 @@ public class MetodoClassificadorV14 extends DESDDClassifier {
 	{
 		this.gerarLambdas();
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-			this.poolOfEnsembles[i].lambdaOption.setValue(this.lambdas[i]);
+			this.poolOfEnsembles[i].setLambda(this.lambdas[i]);
 		}
 	}
 	

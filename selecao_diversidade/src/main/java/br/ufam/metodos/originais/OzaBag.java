@@ -1,4 +1,4 @@
-package br.ufam.metodos.DDD;
+package br.ufam.metodos.originais;
 
 import com.github.javacliparser.IntOption;
 import com.yahoo.labs.samoa.instances.Instance;

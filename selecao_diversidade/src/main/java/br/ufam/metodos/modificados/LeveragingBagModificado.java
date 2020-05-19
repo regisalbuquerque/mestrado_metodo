@@ -17,7 +17,7 @@
  *    along with this program. If not, see <http://www.gnu.org/licenses/>.
  *    
  */
-package br.ufam.metodos.leveraging.v2;
+package br.ufam.metodos.modificados;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
