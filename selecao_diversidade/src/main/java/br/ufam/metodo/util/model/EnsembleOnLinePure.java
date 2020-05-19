@@ -9,6 +9,7 @@ import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
 
+@Deprecated
 public class EnsembleOnLinePure extends AbstractEnsemble{
     
 

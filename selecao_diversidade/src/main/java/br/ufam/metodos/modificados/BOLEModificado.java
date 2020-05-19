@@ -4,18 +4,17 @@ import com.yahoo.labs.samoa.instances.Instance;
 
 import br.ufam.metodo.util.model.EnsembleUtil;
 import br.ufam.metodo.util.model.IEnsembleClassifiers;
+import br.ufam.metodos.originais.BOLE;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
-import moa.classifiers.meta.ADOB;
 import moa.core.MiscUtils;
 
-
-
-public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
+public class BOLEModificado extends BOLE implements IEnsembleClassifiers{
 
     private static final long serialVersionUID = 1L;
-    
+
     EnsembleUtil ensembleUtil = new EnsembleUtil();
+    
 
     @Override
     public void resetLearningImpl() {
@@ -23,7 +22,7 @@ public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
         this.orderPosition = new int[this.ensemble.length];
         Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
         baseLearner.resetLearning();
-        for (int i = 0; i < this.ensemble.length; i++) {
+        for (i = 0; i < this.ensemble.length; i++) {
             this.ensemble[i] = baseLearner.copy();
             this.orderPosition[i] = i;
         }
@@ -40,20 +39,19 @@ public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
     	
 	// Calculates current accuracy of experts
         double[] acc = new double[this.ensemble.length];
-        for ( int i=0; i<this.ensemble.length; i++ ) {
+        for (i = 0; i < this.ensemble.length; i++) {
             acc[i] = this.scms[this.orderPosition[i]] + this.swms[this.orderPosition[i]];
-            if ( acc[i] != 0.0 ) {
+            if (acc[i] != 0.0) {
                 acc[i] = this.scms[this.orderPosition[i]] / acc[i];
             }
         }
         
 	// Sort by accuracy in ascending order
-        double key_acc; int key_position, j;
-        for ( int i=1; i<this.ensemble.length; i++ ) {
+        for (i = 1; i < this.ensemble.length; i++) {
             key_position = this.orderPosition[i];
             key_acc = acc[i];
-            j = i-1;
-            while ( j>=0 && acc[j]<key_acc ) {
+            j = i - 1;
+            while ( (j >=0) && (acc[j] < key_acc) ) {
                 this.orderPosition[j+1] = this.orderPosition[j];
                 acc[j+1] = acc[j];
                 j--;
@@ -62,13 +60,15 @@ public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
             acc[j+1] = key_acc;
         }
         
-        boolean correct=false; int pos;
-        double lambda_d = ensembleUtil.getLambda(); int maxAcc=0, minAcc=this.ensemble.length-1;
-        for (int i = 0; i < this.ensemble.length; i++) {
+        correct = false; 
+        maxAcc = 0; 
+        minAcc = this.ensemble.length - 1; 
+        lambda_d = ensembleUtil.getLambda(); 
+        for (i = 0; i < this.ensemble.length; i++) {
         	
         	ensembleUtil.computaClassificadorDrift(this.ensemble[i], inst, i);
         	
-            if ( correct ) {
+            if (correct) {
                 pos = this.orderPosition[maxAcc];
                 maxAcc++;
             } else {
@@ -76,12 +76,10 @@ public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
                 minAcc--;
             }
             
-            double k;
-            if ( this.pureBoostOption.isSet() ) {
+            if (this.pureBoostOption.isSet())
                 k = lambda_d;
-            } else {
+            else
                 k = MiscUtils.poisson(lambda_d, this.classifierRandom);
-            }
             
             if (k > 0.0) {
                 Instance weightedInst = (Instance) inst.copy();
@@ -92,11 +90,11 @@ public class ADOBModificado extends ADOB implements IEnsembleClassifiers{
 	    // Increases or decreases lambda based on the prediction of instance
             if (this.ensemble[pos].correctlyClassifies(inst)) {
                 this.scms[pos] += lambda_d;
-                lambda_d *= this.trainingWeightSeenByModel / (2 * this.scms[pos]);
+                lambda_d *= (this.trainingWeightSeenByModel / (2 * this.scms[pos]));
                 correct = true;
             } else {
-                this.swms[pos] += lambda_d;
-                lambda_d *= this.trainingWeightSeenByModel / (2 * this.swms[pos]);
+                this.swms[pos] += lambda_d; 
+                lambda_d *= (this.trainingWeightSeenByModel / (2 * this.swms[pos]));
                 correct = false;
             }
         }

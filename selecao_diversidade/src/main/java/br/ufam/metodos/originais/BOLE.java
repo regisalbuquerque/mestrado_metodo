@@ -75,13 +75,13 @@ public class BOLE extends AbstractClassifier implements MultiClassClassifier {
             'w', "Weight shift associated with the error bound.",
             0.0, 0.0, 5.0);
     
-    private double memberWeight;
-    private double key_acc; 
-    private int key_position, i, j;
-    private int maxAcc, minAcc, pos;
-    private double lambda_d, k;
-    private boolean correct, okay;
-    private double em, Bm;
+    protected double memberWeight;
+    protected double key_acc; 
+    protected int key_position, i, j;
+    protected int maxAcc, minAcc, pos;
+    protected double lambda_d, k;
+    protected boolean correct, okay;
+    protected double em, Bm;
 
     protected Classifier[] ensemble;
     protected int[] orderPosition;

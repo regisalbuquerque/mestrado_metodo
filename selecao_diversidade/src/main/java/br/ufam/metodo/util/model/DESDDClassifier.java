@@ -40,8 +40,8 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 
 	public MultiChoiceOption selectionOptionEstrategiaGeracao = new MultiChoiceOption("SelectionEstrategiaGeracao", 'g',
-			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure"},
-			new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure"}, 0);
+			"SelectionEstrategiaGeracao.", new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure", "ADOB", "BOLE"},
+			new String[] { "OnlineBagging", "OnlineBoosting", "LeverageBagging", "Pure", "ADOB", "BOLE"}, 0);
 	
 	public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
 			"Drift detection method to use.", ChangeDetector.class, "DDM");
@@ -244,13 +244,9 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		
 		ensemble.setLambda(lambda);
 		ensemble.setSize(this.ensembleSizeOption.getValue());
-		ensemble.setNumBaseLearners(this.numBaseLeanersOption.getValue());
-		ensemble.setBaseLearner1(this.baseLearner1Option.getValueAsCLIString());
-		ensemble.setBaseLearner2(this.baseLearner2Option.getValueAsCLIString());
-		ensemble.setBaseLearner3(this.baseLearner3Option.getValueAsCLIString());
-		ensemble.setBaseLearner4(this.baseLearner4Option.getValueAsCLIString());
-		ensemble.setBaseLearner5(this.baseLearner5Option.getValueAsCLIString());
+		ensemble.setBaseLearner(this.baseLearner1Option.getValueAsCLIString());
 		ensemble.setRandomSeed(this.randomSeed);
+		ensemble.setChangeDetector(((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy());
 		
         
         //LAMBDA

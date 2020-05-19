@@ -21,46 +21,19 @@ package br.ufam.metodos.modificados;
 
 import com.yahoo.labs.samoa.instances.Instance;
 
-import br.ufam.metodo.util.model.AbstractEnsemble;
+import br.ufam.metodo.util.model.EnsembleUtil;
+import br.ufam.metodo.util.model.IEnsembleClassifiers;
 import moa.classifiers.Classifier;
 import moa.classifiers.core.driftdetection.ADWIN;
-import moa.core.DoubleVector;
-import moa.core.Measurement;
+import moa.classifiers.core.driftdetection.ChangeDetector;
+import moa.classifiers.meta.LeveragingBag;
 import moa.core.MiscUtils;
 
-/**
- * Leveraging Bagging for evolving data streams using ADWIN. Leveraging Bagging
- * and Leveraging Bagging MC using Random Output Codes ( -o option).
- *
- * <p>See details in:<br /> Albert Bifet, Geoffrey Holmes, Bernhard Pfahringer.
- * Leveraging Bagging for Evolving Data Streams Machine Learning and Knowledge
- * Discovery in Databases, European Conference, ECML PKDD}, 2010.</p>
- *
- * @author Albert Bifet (abifet at cs dot waikato dot ac dot nz)
- * @version $Revision: 7 $
- */
-public class LeveragingBagModificado extends AbstractEnsemble{
+public class LeveragingBagModificado extends LeveragingBag implements IEnsembleClassifiers{
 
     private static final long serialVersionUID = 1L;
-
-    @Override
-    public String getPurposeString() {
-        return "Leveraging Bagging for evolving data streams using ADWIN.";
-    }
-
-
-
-    protected Classifier[] ensemble;
-
-    protected ADWIN[] ADError;
     
-    protected boolean drift;
-
-    protected int numberOfChangesDetected;
-
-    protected int[][] matrixCodes;
-
-    protected boolean initMatrixCodes = false;
+    EnsembleUtil ensembleUtil = new EnsembleUtil();
 
     @Override
     public void resetLearningImpl() {
@@ -78,10 +51,16 @@ public class LeveragingBagModificado extends AbstractEnsemble{
         if (this.outputCodesOption.isSet()) {
             this.initMatrixCodes = true;
         }
+        
+        ensembleUtil.prepare(baseLearner, this.ensemble);
+        
     }
 
     @Override
     public void trainOnInstanceImpl(Instance inst) {
+    	
+    	ensembleUtil.praparaTreinamento();
+    	
         int numClasses = inst.numClasses();
         //Output Codes
         if (this.initMatrixCodes == true) {
@@ -115,12 +94,14 @@ public class LeveragingBagModificado extends AbstractEnsemble{
 
 
         boolean Change = false;
-        this.drift = false;  // A priori DRIFT igual a FALSE
         Instance weightedInst = (Instance) inst.copy();
-        double w = this.weightShrinkOption.getValue();
+        double w = ensembleUtil.getLambda();
 
         //Train ensemble of classifiers
         for (int i = 0; i < this.ensemble.length; i++) {
+        	
+        	ensembleUtil.computaClassificadorDrift(this.ensemble[i], inst, i);
+        	
             double k = 0.0;
             switch (this.leveraginBagAlgorithmOption.getChosenIndex()) {
                 case 0: //LeveragingBag
@@ -161,99 +142,57 @@ public class LeveragingBagModificado extends AbstractEnsemble{
         }
         if (Change) {
             numberOfChangesDetected++;
-            this.drift = true;       //DRIFT igual a TRUE
-            
-            
+            double max = 0.0;
+            int imax = -1;
+            for (int i = 0; i < this.ensemble.length; i++) {
+                if (max < this.ADError[i].getEstimation()) {
+                    max = this.ADError[i].getEstimation();
+                    imax = i;
+                }
+            }
+            if (imax != -1) {
+                this.ensemble[imax].resetLearning();
+                //this.ensemble[imax].trainOnInstance(inst);
+                this.ADError[imax] = new ADWIN((double) this.deltaAdwinOption.getValue());
+            }
         }
     }
     
+	@Override
+	public void setChangeDetector(ChangeDetector changeDetector) {
+		ensembleUtil.setChangeDetector(changeDetector);
+	}
+
+	@Override
+	public boolean detectouDrift() {
+		return ensembleUtil.isDrift();
+	}
+
     public void estrategiaSimpleReset()
     {
-    	double max = 0.0;
-        int imax = -1;
-        for (int i = 0; i < this.ensemble.length; i++) {
-            if (max < this.ADError[i].getEstimation()) {
-                max = this.ADError[i].getEstimation();
-                imax = i;
-            }
-        }
-        if (imax != -1) {
-            this.ensemble[imax].resetLearning();
-            //this.ensemble[imax].trainOnInstance(inst);
-            this.ADError[imax] = new ADWIN((double) this.deltaAdwinOption.getValue());
-        }
+    	ensembleUtil.estrategiaSimpleReset(super.ensemble);
     }
 
-    @Override
-    public double[] getVotesForInstance(Instance inst) {
-        if (this.outputCodesOption.isSet()) {
-            return getVotesForInstanceBinary(inst);
-        }
-        DoubleVector combinedVote = new DoubleVector();
-        for (int i = 0; i < this.ensemble.length; i++) {
-            DoubleVector vote = new DoubleVector(this.ensemble[i].getVotesForInstance(inst));
-            if (vote.sumOfValues() > 0.0) {
-                vote.normalize();
-                combinedVote.addValues(vote);
-            }
-        }
-        return combinedVote.getArrayRef();
-    }
+	@Override
+	public void setLambda(double lambda) {
+		ensembleUtil.setLambda(lambda);
+	}
 
-    public double[] getVotesForInstanceBinary(Instance inst) {
-        double combinedVote[] = new double[(int) inst.numClasses()];
-        Instance weightedInst = (Instance) inst.copy();
-        if (this.initMatrixCodes == false) {
-            for (int i = 0; i < this.ensemble.length; i++) {
-                //Replace class by OC
-                weightedInst.setClassValue((double) this.matrixCodes[i][(int) inst.classValue()]);
+	@Override
+	public double getLambda() {
+		return ensembleUtil.getLambda();
+	}
 
-                double vote[];
-                vote = this.ensemble[i].getVotesForInstance(weightedInst);
-                //Binary Case
-                int voteClass = 0;
-                if (vote.length == 2) {
-                    voteClass = (vote[1] > vote[0] ? 1 : 0);
-                }
-                //Update votes
-                for (int j = 0; j < inst.numClasses(); j++) {
-                    if (this.matrixCodes[i][j] == voteClass) {
-                        combinedVote[j] += 1;
-                    }
-                }
-            }
-        }
-        return combinedVote;
-    }
+	@Override
+	public void setSize(int size) {
+		super.ensembleSizeOption.setValue(size);
+	}
 
-    @Override
-    public boolean isRandomizable() {
-        return true;
-    }
-
-    @Override
-    public void getModelDescription(StringBuilder out, int indent) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    protected Measurement[] getModelMeasurementsImpl() {
-        return new Measurement[]{new Measurement("ensemble size",
-                    this.ensemble != null ? this.ensemble.length : 0),
-                    new Measurement("change detections", this.numberOfChangesDetected)
-                };
-    }
-
-    @Override
-    public Classifier[] getSubClassifiers() {
-        return this.ensemble.clone();
-    }
-    
-    
-    public boolean detectouDrift()
-    {
-    	return this.drift;
-    }
+	@Override
+	public void setBaseLearner(String baseLearner) {
+		// TODO Auto-generated method stub
+		
+	}
     
 }
 
