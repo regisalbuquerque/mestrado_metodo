@@ -137,13 +137,13 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 
 	protected boolean newBufferReset;
 
-	protected int ddmLevel;
+	protected int detectorLevel;
 
-	public static final int DDM_INCONTROL_LEVEL = 0;
+	public static final int NORMAL_LEVEL = 0;
 
-	public static final int DDM_WARNING_LEVEL = 1;
+	public static final int WARNING_LEVEL = 1;
 
-	public static final int DDM_OUTCONTROL_LEVEL = 2;
+	public static final int DRIFT_LEVEL = 2;
 	
 	boolean detectDrift = false;
 
@@ -266,92 +266,103 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 	
 	@Override
 	public void trainOnInstanceImpl(Instance inst) {
+		
+		String estrategia = selectionOptionEstrategiaRecuperacao.getChosenLabel();
+		
+		if (estrategia.equals("SimpleReset") || estrategia.equals("SimpleResetEnsemble"))
+		{
+			metodoEnsembleDetector(inst);
+		}
+		else
+		{
+			metodoSystemDetector(inst);
+		}
+		
+		
+	}
 
+	private void metodoSystemDetector(Instance inst) {
 		this.iteracao++;
 		detectDrift = false;
-
-		//CASO Recuperação = ComBufferWarning -> USA DDM
-		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("RetreinaTodosComBufferWarning") || selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem1Detector")) {
-
-			int trueClass = (int) inst.classValue();
-			boolean prediction;
-			if (Utils.maxIndex(getVotesForInstance(inst)) == trueClass) {
-				prediction = true;
-			} else {
-				prediction = false;
-			}
-			this.driftDetectionMethod.input(prediction ? 0.0 : 1.0);
-			this.ddmLevel = DDM_INCONTROL_LEVEL;
-			if (this.driftDetectionMethod.getChange()) {
-				this.ddmLevel = DDM_OUTCONTROL_LEVEL;
-			}
-			if (this.driftDetectionMethod.getWarningZone()) {
-				this.ddmLevel = DDM_WARNING_LEVEL;
-			}
-			switch (this.ddmLevel) {
-			case DDM_WARNING_LEVEL:
+		
+		int trueClass = (int) inst.classValue();
+		boolean prediction;
+		if (Utils.maxIndex(getVotesForInstance(inst)) == trueClass) {
+			prediction = true;
+		} else {
+			prediction = false;
+		}
+		this.driftDetectionMethod.input(prediction ? 0.0 : 1.0);
+		this.detectorLevel = NORMAL_LEVEL;
+		if (this.driftDetectionMethod.getChange()) {
+			this.detectorLevel = DRIFT_LEVEL;
+		}
+		if (this.driftDetectionMethod.getWarningZone()) {
+			this.detectorLevel = WARNING_LEVEL;
+		}
+		
+		switch (this.detectorLevel) {
+			case WARNING_LEVEL:
 				if (newBufferReset == true) {
 					this.warningDetected++;
 					this.BufferWarning = new BufferInstancias();
 					newBufferReset = false;
 				}
 				this.BufferWarning.incluir(inst);
+				treinamento(inst);
 				break;
-
-			case DDM_OUTCONTROL_LEVEL:
+	
+			case DRIFT_LEVEL:
 				detectDrift = true;
 				this.changeDetected++;
 				this.ultimoDrift = iteracao;
 				executaEstrategia(null, BufferWarning);
-				// return; << Testar com return para não executar o treinamento abaixo;
-				// Verificar se faz diferença!
 				break;
-
-			case DDM_INCONTROL_LEVEL:
+	
+			case NORMAL_LEVEL:
 				newBufferReset = true;
+				treinamento(inst);
 				break;
-			default:
-
-			}
-			
-			//Randomizar Lambdas // Se o método for sobrescrito
-			this.randomizaLambdasEnsembles();
-
-			// Treinar o POOL
-			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-				treinarEnsemble(inst, i);
-			}
 		}
-		else // NÃO USA DDM
+	}
+
+	private void metodoEnsembleDetector(Instance inst) {
+		this.iteracao++;
+		detectDrift = false;
+		
+		List<Integer> ensemblesComDrift = new ArrayList<>(); 
+		
+		//Randomizar Lambdas // Se o método for sobrescrito
+		this.randomizaLambdasEnsembles();
+		
+		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+			
+			IEnsembleClassifiers ensemble = treinarEnsemble(inst, i);
+		    
+		    if (ensemble.detectouDrift())
+		    {
+		    	detectDrift = true;
+		    	ensemblesComDrift.add(i);
+		    }
+		}
+		
+		if (detectDrift)
 		{
+			//Executa estratégia ... ... inclusive a estratégia deve zera o acc e a diversidade (estrategiaInicial())
 			
-	    	List<Integer> ensemblesComDrift = new ArrayList<>(); 
-	    	
-	    	//Randomizar Lambdas // Se o método for sobrescrito
-			this.randomizaLambdasEnsembles();
-	    	
-	        for (int i = 0; i < this.poolOfEnsembles.length; i++) {
-	        	
-	        	IEnsembleClassifiers ensemble = treinarEnsemble(inst, i);
-	            
-	            if (ensemble.detectouDrift())
-	            {
-	            	detectDrift = true;
-	            	ensemblesComDrift.add(i);
-	            }
-	        }
-	        
-	        if (detectDrift)
-	        {
-	        	//Executa estratégia ... ... inclusive a estratégia deve zera o acc e a diversidade (estrategiaInicial())
-	        	
-	        	executaEstrategia(ensemblesComDrift, null);
-	        	
-	        }
-			
+			executaEstrategia(ensemblesComDrift, null);
 			
 		}
+	}
 
+	private void treinamento(Instance inst) {
+		//Randomizar Lambdas // Se o método for sobrescrito
+		this.randomizaLambdasEnsembles();
+
+		// Treinar o POOL
+		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
+			treinarEnsemble(inst, i);
+		}
 	}
 
 	protected IEnsembleClassifiers treinarEnsemble(Instance inst, int i) {
@@ -389,30 +400,14 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 			for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 				this.poolOfEnsembles[i].estrategiaSimpleReset();
 			}
+			return;
         }
-		else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleReset"))
-        {
-            if (!ensemblesComDrift.isEmpty()) {
-            	for (Integer i: ensemblesComDrift)
-            	{
-            		this.poolOfEnsembles[i].estrategiaSimpleReset();
-            	}
-            }
-        }
-        else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetEnsemble"))
-        {
-        	if (!ensemblesComDrift.isEmpty()) {
-            	for (Integer i: ensemblesComDrift)
-            	{
-            		inicializa_ensemble(i);
-            	}
-            }
-        }
-        else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem") || selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem1Detector"))
+        if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem") || selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetSystem1Detector"))
         {
         	estrategiaInicial(); //Inicia todo mundo sem retreino
+        	return;
         }
-        else if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("RetreinaTodosComBufferWarning")) {
+        if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("RetreinaTodosComBufferWarning")) {
 			estrategiaInicial();
 
 			// Treino com Buffer WARNING
@@ -425,8 +420,29 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 				}
 
 			}
-		
+			return;
 		}
+		
+		if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleReset"))
+        {
+            if (!ensemblesComDrift.isEmpty()) {
+            	for (Integer i: ensemblesComDrift)
+            	{
+            		this.poolOfEnsembles[i].estrategiaSimpleReset();
+            	}
+            }
+            return;
+        }
+        if (selectionOptionEstrategiaRecuperacao.getChosenLabel().equals("SimpleResetEnsemble"))
+        {
+        	if (!ensemblesComDrift.isEmpty()) {
+            	for (Integer i: ensemblesComDrift)
+            	{
+            		inicializa_ensemble(i);
+            	}
+            }
+        	return;
+        }
 
 	}
 
