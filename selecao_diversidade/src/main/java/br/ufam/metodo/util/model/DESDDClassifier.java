@@ -169,16 +169,20 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		medidaSelecao = MedidaSelecaoFactory.fabrica(this.selectionOptionEstrategiaSelecao.getChosenLabel());
 		medidaCalculo = MedidaCalculoFactory.fabrica(this.selectionOptionMedidaCalculo.getChosenLabel());
 
-		this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
-		this.newBufferReset = false;
-
 		this.poolOfEnsembles = metodoAprendizado.alocaPoolEnsembles(this.ensemblesNumberOption.getValue());
 		
-		this.BufferWarning = new BufferInstancias();
+		//Inicializa o Detector de Drift
+		inicializaDetectorDrift();
 		
 		setupLambdas();
 		
 		estrategiaInicial();
+	}
+
+	private void inicializaDetectorDrift() {
+		this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
+		this.newBufferReset = false;
+		this.BufferWarning = new BufferInstancias();
 	}
 	
 	public abstract void setupLambdas();
@@ -210,8 +214,9 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 		for (int i = 0; i < this.poolOfEnsembles.length; i++) {
 			inicializa_ensemble(i);
 		}
-
 	}
+	
+	
 	
 	protected void inicializa_ensemble(int i) {
 		this.indicadores[i] = new Indicadores();
@@ -317,6 +322,7 @@ public abstract class DESDDClassifier extends AbstractClassifier implements Dete
 				this.changeDetected++;
 				this.ultimoDrift = iteracao;
 				executaEstrategia(null, BufferWarning);
+				inicializaDetectorDrift();
 				break;
 	
 			case NORMAL_LEVEL:
