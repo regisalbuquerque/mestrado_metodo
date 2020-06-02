@@ -52,7 +52,7 @@ public class DiversityForDealingWithDrifts extends AbstractClassifier implements
     private static final long serialVersionUID = 1L;
 
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l',
-            "Classifier to train.", Classifier.class, "br.ufam.metodos.DDD.OzaBag -s 25");
+            "Classifier to train.", Classifier.class, "br.ufam.metodos.originais.OzaBag -s 25");
     
     public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
              "Drift detection method to use.", ChangeDetector.class, "EDDM");
